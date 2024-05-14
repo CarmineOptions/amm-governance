@@ -3,7 +3,7 @@ use cubit::f128::types::{Fixed, FixedTrait};
 use starknet::{ContractAddress, ClassHash};
 
 #[starknet::interface]
-trait IAMM<TContractState> {
+pub trait IAMM<TContractState> {
     fn trade_open(
         ref self: TContractState,
         option_type: OptionType,
@@ -214,7 +214,7 @@ trait IAMM<TContractState> {
 }
 
 #[starknet::interface]
-trait IOptionToken<TState> {
+pub trait IOptionToken<TState> {
     // IERC20
     fn total_supply(self: @TState) -> u256;
     fn balance_of(self: @TState, account: ContractAddress) -> u256;

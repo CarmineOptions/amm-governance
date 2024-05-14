@@ -1,6 +1,13 @@
+use starknet::ContractAddress;
+
 #[starknet::interface]
 trait IMigrate<TContractState> {
     fn add_custom_proposals(ref self: TContractState);
+}
+
+#[starknet::interface]
+trait ICarmineGovernance<TContractState> {
+    fn get_amm_address(self: @TContractState) -> ContractAddress;
 }
 
 #[starknet::contract]
@@ -78,7 +85,10 @@ mod Governance {
         fn get_governance_token_address(self: @ContractState) -> ContractAddress {
             self.governance_token_address.read()
         }
+    }
 
+    #[abi(embed_v0)]
+    impl CarmineGovernance of super::ICarmineGovernance<ContractState> {
         fn get_amm_address(self: @ContractState) -> ContractAddress {
             self.amm_address.read()
         }

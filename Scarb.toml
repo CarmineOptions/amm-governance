@@ -8,6 +8,10 @@ edition = "2023_11"
 [dependencies]
 cubit = { git = "https://github.com/influenceth/cubit.git", commit = "62756082bf2555d7ab25c69d9c7bc30574ff1ce8" }
 konoha = { git = "https://github.com/carmineoptions/konoha", branch = "remove-carmine" }
+# This should be upgraded ASAP, but can't be because you can't have two diff versions of the same package in one project
+# Once Konoha snforge_std is upgraded, we can upgrade this to the latest version
+snforge_std = { git = "https://github.com/foundry-rs/starknet-foundry", tag = "v0.20.1" }
+starknet = ">=2.0.0"
 
 [[target.starknet-contract]]
 
