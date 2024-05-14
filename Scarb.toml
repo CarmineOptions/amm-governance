@@ -6,6 +6,7 @@ edition = "2023_11"
 # See more keys and their definitions at https://docs.swmansion.com/scarb/docs/reference/manifest.html
 
 [dependencies]
+cubit = { git = "https://github.com/influenceth/cubit.git", commit = "62756082bf2555d7ab25c69d9c7bc30574ff1ce8" }
 konoha = { git = "https://github.com/carmineoptions/konoha", branch = "remove-carmine" }
 
 [[target.starknet-contract]]

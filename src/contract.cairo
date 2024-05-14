@@ -5,11 +5,11 @@ trait IMigrate<TContractState> {
 
 #[starknet::contract]
 mod Governance {
+    use konoha::airdrop::airdrop as airdrop_component;
+    use konoha::proposals::proposals as proposals_component;
     use konoha::proposals::proposals::InternalTrait;
     use konoha::types::{BlockNumber, VoteStatus, ContractType, PropDetails, CustomProposalConfig};
-    use konoha::proposals::proposals as proposals_component;
     use konoha::upgrades::upgrades as upgrades_component;
-    use konoha::airdrop::airdrop as airdrop_component;
 
     use starknet::ContractAddress;
 
@@ -88,10 +88,14 @@ mod Governance {
     impl Migrate of super::IMigrate<ContractState> {
         fn add_custom_proposals(ref self: ContractState) {
             let upgrade_amm = CustomProposalConfig {
-                target: self.amm_address.read().into(), selector: selector!("upgrade"), library_call: false
+                target: self.amm_address.read().into(),
+                selector: selector!("upgrade"),
+                library_call: false
             }; // TODO test
             let upgrade_govtoken = CustomProposalConfig {
-                target: self.governance_token_address.read().into(), selector: selector!("upgrade"), library_call: false
+                target: self.governance_token_address.read().into(),
+                selector: selector!("upgrade"),
+                library_call: false
             };
             self.proposals.add_custom_proposal_config(upgrade_amm);
             self.proposals.add_custom_proposal_config(upgrade_govtoken);
