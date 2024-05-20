@@ -22,15 +22,15 @@ mod OptionDeployer {
     use amm_governance::constants::{
         OPTION_CALL, OPTION_PUT, TRADE_SIDE_LONG, TRADE_SIDE_SHORT, OPTION_TOKEN_CLASS_HASH
     };
+    use amm_governance::traits::{
+        IAMMDispatcher, IAMMDispatcherTrait, IOptionTokenDispatcher, IOptionTokenDispatcherTrait
+    };
     use amm_governance::types::{FutureOption, OptionSide, OptionType};
     use core::array::{ArrayTrait, SpanTrait};
     use core::option::OptionTrait;
     use core::traits::{Into, TryInto};
 
     use cubit::f128::types::{Fixed, FixedTrait};
-    use amm_governance::traits::{
-        IAMMDispatcher, IAMMDispatcherTrait, IOptionTokenDispatcher, IOptionTokenDispatcherTrait
-    };
     use starknet::ClassHash;
     use starknet::SyscallResult;
 

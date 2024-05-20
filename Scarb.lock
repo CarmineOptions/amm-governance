@@ -18,9 +18,8 @@ source = "git+https://github.com/influenceth/cubit.git#8eacc2b1d952d6266f9725776
 [[package]]
 name = "konoha"
 version = "0.4.0"
-source = "git+https://github.com/carmineoptions/konoha?branch=remove-carmine#5bc97d5f1b8eb5168c6b68404d7d84fe2f05c163"
+source = "git+https://github.com/carmineoptions/konoha?branch=remove-carmine#1b94c7594d40ae73756cbe0d17dfcb969b283aca"
 dependencies = [
- "cubit",
  "openzeppelin",
  "snforge_std",
 ]
@@ -32,5 +31,5 @@ source = "git+https://github.com/OpenZeppelin/cairo-contracts.git?tag=v0.10.0#d7
 
 [[package]]
 name = "snforge_std"
-version = "0.20.1"
-source = "git+https://github.com/foundry-rs/starknet-foundry?tag=v0.20.1#fea2db8f2b20148cc15ee34b08de12028eb42942"
+version = "0.23.0"
+source = "git+https://github.com/foundry-rs/starknet-foundry?tag=v0.23.0#f2bff8f796763ada77fe6033ec1b034ceee22abd"

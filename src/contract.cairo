@@ -1,17 +1,17 @@
 use starknet::ContractAddress;
 
 #[starknet::interface]
-trait IMigrate<TContractState> {
+pub trait IMigrate<TContractState> {
     fn add_custom_proposals(ref self: TContractState);
 }
 
 #[starknet::interface]
-trait ICarmineGovernance<TContractState> {
+pub trait ICarmineGovernance<TContractState> {
     fn get_amm_address(self: @TContractState) -> ContractAddress;
 }
 
 #[starknet::contract]
-mod Governance {
+pub mod Governance {
     use konoha::airdrop::airdrop as airdrop_component;
     use konoha::proposals::proposals as proposals_component;
     use konoha::proposals::proposals::InternalTrait;
@@ -97,6 +97,7 @@ mod Governance {
     #[abi(embed_v0)]
     impl Migrate of super::IMigrate<ContractState> {
         fn add_custom_proposals(ref self: ContractState) {
+            assert(!self.migration_performed.read(), 'migration already done');
             let upgrade_amm = CustomProposalConfig {
                 target: self.amm_address.read().into(),
                 selector: selector!("upgrade"),
@@ -109,6 +110,7 @@ mod Governance {
             };
             self.proposals.add_custom_proposal_config(upgrade_amm);
             self.proposals.add_custom_proposal_config(upgrade_govtoken);
+            
             self.migration_performed.write(true);
         }
     }
