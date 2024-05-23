@@ -12,9 +12,9 @@ use amm_governance::contract::{
 };
 use super::utils::{vote_on_proposal, IERC20Dispatcher, IERC20DispatcherTrait};
 use snforge_std::{
-    BlockId, declare, ContractClassTrait, ContractClass, start_prank, CheatTarget, start_warp, prank, CheatSpan
+    BlockId, declare, ContractClassTrait, ContractClass, start_prank, CheatTarget, prank, CheatSpan, roll
 };
-use starknet::{ClassHash, ContractAddress, get_block_timestamp};
+use starknet::{ClassHash, ContractAddress, get_block_timestamp, get_block_number};
 
 #[test]
 #[fork("MAINNET")]
@@ -72,7 +72,7 @@ fn test_deposit_to_amm_from_treasury(gov_contract_addr: ContractAddress) {
         .unwrap(); // random whale
     let transfer_dispatcher = IERC20Dispatcher { contract_address: eth_addr };
     let oneeth = 1000000000000000000;
-    let to_deposit = oneeth - 10000000000000000;
+    let to_deposit = 900000000000000000;
     prank(CheatTarget::One(eth_addr), sequencer_address, CheatSpan::TargetCalls(1));
     transfer_dispatcher.transfer(treasury_address, oneeth);
     assert(transfer_dispatcher.balanceOf(treasury_address) >= to_deposit , 'balance too low??');
@@ -81,8 +81,7 @@ fn test_deposit_to_amm_from_treasury(gov_contract_addr: ContractAddress) {
     transfer_dispatcher.approve(treasury_address, to_deposit);
 
     let treasury_dispatcher = ITreasuryDispatcher { contract_address: treasury_address };
-    prank(CheatTarget::One(treasury_address), gov_contract_addr, CheatSpan::TargetCalls(1));
-    println!("providing liq");
+    prank(CheatTarget::One(treasury_address), gov_contract_addr, CheatSpan::TargetCalls(2));
     treasury_dispatcher
         .provide_liquidity_to_carm_AMM(
             0x49d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7.try_into().unwrap(),
@@ -91,6 +90,16 @@ fn test_deposit_to_amm_from_treasury(gov_contract_addr: ContractAddress) {
             0,
             to_deposit.into()
         );
+    println!("provided liq");
+    roll(CheatTarget::All, get_block_number()+1, CheatSpan::Indefinite); // to bypass sandwich guard
+    treasury_dispatcher.withdraw_liquidity(
+        0x49d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7.try_into().unwrap(),
+        0x53c91253bc9682c04929ca02ed00b3e423f6710d2ee7e0d5ebb06f3ecf368a8.try_into().unwrap(),
+        0x49d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7.try_into().unwrap(),
+        0,
+        to_deposit.into()
+    );
+    assert(transfer_dispatcher.balanceOf(treasury_address) >= to_deposit , 'balance too low??');
 }
 
 fn check_if_healthy(gov_contract_addr: ContractAddress) -> bool {
