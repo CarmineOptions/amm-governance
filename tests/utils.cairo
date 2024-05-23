@@ -1,3 +1,7 @@
+use amm_governance::contract::{
+    IMigrateDispatcher, IMigrateDispatcherTrait, ICarmineGovernanceDispatcher,
+    ICarmineGovernanceDispatcherTrait
+};
 use core::num::traits::Zero;
 use konoha::contract::IGovernanceDispatcher;
 use konoha::contract::IGovernanceDispatcherTrait;
@@ -5,10 +9,6 @@ use konoha::proposals::IProposalsDispatcher;
 use konoha::proposals::IProposalsDispatcherTrait;
 use konoha::upgrades::IUpgradesDispatcher;
 use konoha::upgrades::IUpgradesDispatcherTrait;
-use amm_governance::contract::{
-    IMigrateDispatcher, IMigrateDispatcherTrait, ICarmineGovernanceDispatcher,
-    ICarmineGovernanceDispatcherTrait
-};
 use snforge_std::{start_prank, CheatTarget, start_warp};
 use starknet::{ClassHash, ContractAddress, get_block_timestamp};
 

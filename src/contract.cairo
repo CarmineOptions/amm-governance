@@ -110,7 +110,7 @@ pub mod Governance {
             };
             self.proposals.add_custom_proposal_config(upgrade_amm);
             self.proposals.add_custom_proposal_config(upgrade_govtoken);
-            
+
             self.migration_performed.write(true);
         }
     }
