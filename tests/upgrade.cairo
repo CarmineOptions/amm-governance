@@ -12,7 +12,7 @@ use amm_governance::contract::{
 };
 use super::utils::{vote_on_proposal, IERC20Dispatcher, IERC20DispatcherTrait};
 use snforge_std::{
-    BlockId, declare, ContractClassTrait, ContractClass, start_prank, CheatTarget, start_warp
+    BlockId, declare, ContractClassTrait, ContractClass, start_prank, CheatTarget, start_warp, prank, CheatSpan
 };
 use starknet::{ClassHash, ContractAddress, get_block_timestamp};
 
@@ -70,17 +70,18 @@ fn test_deposit_to_amm_from_treasury(gov_contract_addr: ContractAddress) {
         0x01176a1bd84444c89232ec27754698e5d2e7e1a7f1539f12027f28b23ec9f3d8
         .try_into()
         .unwrap(); // random whale
-    start_prank(CheatTarget::One(eth_addr), sequencer_address);
     let transfer_dispatcher = IERC20Dispatcher { contract_address: eth_addr };
     let oneeth = 1000000000000000000;
     let to_deposit = oneeth - 10000000000000000;
+    prank(CheatTarget::One(eth_addr), sequencer_address, CheatSpan::TargetCalls(1));
     transfer_dispatcher.transfer(treasury_address, oneeth);
     assert(transfer_dispatcher.balanceOf(treasury_address) >= to_deposit , 'balance too low??');
-    let treasury_dispatcher = ITreasuryDispatcher { contract_address: treasury_address };
-    start_prank(CheatTarget::One(eth_addr), gov_contract_addr);
-    
+
+    prank(CheatTarget::One(eth_addr), sequencer_address, CheatSpan::TargetCalls(1));
     transfer_dispatcher.approve(treasury_address, to_deposit);
-    start_prank(CheatTarget::One(treasury_address), gov_contract_addr);
+
+    let treasury_dispatcher = ITreasuryDispatcher { contract_address: treasury_address };
+    prank(CheatTarget::One(treasury_address), gov_contract_addr, CheatSpan::TargetCalls(1));
     println!("providing liq");
     treasury_dispatcher
         .provide_liquidity_to_carm_AMM(
