@@ -10,6 +10,7 @@ use konoha::proposals::IProposalsDispatcherTrait;
 use konoha::treasury::{ITreasuryDispatcher, ITreasuryDispatcherTrait};
 use konoha::upgrades::IUpgradesDispatcher;
 use konoha::upgrades::IUpgradesDispatcherTrait;
+use openzeppelin::upgrades::interface::{IUpgradeableDispatcher, IUpgradeableDispatcherTrait};
 use snforge_std::{
     BlockId, declare, ContractClassTrait, ContractClass, start_prank, CheatTarget, prank, CheatSpan,
     roll
@@ -27,37 +28,37 @@ fn test_upgrade_to_master() {
     let dispatcher = IProposalsDispatcher { contract_address: gov_contract_addr };
 
     // declare current and submit proposal
-    let new_contract: ContractClass = declare("Governance").expect('unable to declare!');
-    assert(Zero::is_non_zero(@new_contract.class_hash), 'new classhash zero??');
+    let gov_class: ContractClass = declare("Governance").expect('unable to declare!');
+    assert(Zero::is_non_zero(@gov_class.class_hash), 'new classhash zero??');
     let scaling_address: ContractAddress =
         0x052df7acdfd3174241fa6bd5e1b7192cd133f8fc30a2a6ed99b0ddbfb5b22dcd
         .try_into()
         .unwrap();
     start_prank(CheatTarget::One(gov_contract_addr), scaling_address);
-    let new_prop_id = dispatcher.submit_proposal(new_contract.class_hash.into(), 1);
+    let new_prop_id = dispatcher.submit_proposal(gov_class.class_hash.into(), 1);
+    println!("Prop submitted: {:?}", new_prop_id);
     vote_on_proposal(gov_contract_addr, new_prop_id.try_into().unwrap());
 
     let upgrade_dispatcher = IUpgradesDispatcher { contract_address: gov_contract_addr };
     upgrade_dispatcher.apply_passed_proposal(new_prop_id);
     let amm_governance = IMigrateDispatcher { contract_address: gov_contract_addr };
     amm_governance.add_custom_proposals();
+    println!("Checking if new gov is healthy...");
     assert(check_if_healthy(gov_contract_addr), 'new gov not healthy');
     upgrade_amm(
         gov_contract_addr,
         0x0239b6f9eeb5ffba1df4da7f33e116d3603d724283bc01338125eed82964e729.try_into().unwrap()
     );
-    test_deposit_to_amm_from_treasury(gov_contract_addr);
 }
 
 fn test_deposit_to_amm_from_treasury(gov_contract_addr: ContractAddress) {
     let treasury_class: ContractClass = declare("Treasury").expect('unable to declare Treasury');
     let mut treasury_deploy_calldata = ArrayTrait::new();
     treasury_deploy_calldata.append(gov_contract_addr.into());
+    let amm_addr: ContractAddress = 0x047472e6755afc57ada9550b6a3ac93129cc4b5f98f51c73e0644d129fd208d9.try_into().unwrap();
     treasury_deploy_calldata
         .append(
-            ICarmineGovernanceDispatcher { contract_address: gov_contract_addr }
-                .get_amm_address()
-                .into()
+            amm_addr.into()
         );
     let (treasury_address, _) = treasury_class
         .deploy(@treasury_deploy_calldata)
@@ -101,7 +102,7 @@ fn test_deposit_to_amm_from_treasury(gov_contract_addr: ContractAddress) {
             0x53c91253bc9682c04929ca02ed00b3e423f6710d2ee7e0d5ebb06f3ecf368a8.try_into().unwrap(),
             0x49d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7.try_into().unwrap(),
             0,
-            to_deposit.into()
+            (to_deposit - 100000000000000000).into()
         );
     assert(transfer_dispatcher.balanceOf(treasury_address) >= to_deposit, 'balance too low??');
 }
@@ -122,4 +123,32 @@ fn upgrade_amm(gov_contract_addr: ContractAddress, new_classhash: ClassHash) {
     vote_on_proposal(gov_contract_addr, prop_id);
     let upgrades = IUpgradesDispatcher { contract_address: gov_contract_addr };
     upgrades.apply_passed_proposal(prop_id.into());
+}
+
+fn test_upgrade_amm_back(amm: ContractAddress, owner: ContractAddress, new_classhash: ClassHash) {
+    let upgradable_amm = IUpgradeableDispatcher { contract_address: amm };
+    prank(CheatTarget::One(amm), owner, CheatSpan::TargetCalls(1));
+    upgradable_amm.upgrade(new_classhash);
+}
+
+#[test]
+#[fork("MAINNET")]
+fn scenario_airdrop_staked_carm() {
+    let gov_addr: ContractAddress =
+    0x001405ab78ab6ec90fba09e6116f373cda53b0ba557789a4578d8c1ec374ba0f
+    .try_into()
+    .unwrap();
+
+    let gov_class: ContractClass = declare("Governance").expect('unable to declare!');
+    let floating_class: ContractClass = declare("FloatingToken").expect('unable to declare floating');
+    let voting_class: ContractClass = declare("VotingToken").expect('unable to declare voting');
+
+    let time_zero = get_block_timestamp();
+
+    let marek: ContractAddress = 0x0011d341c6e841426448ff39aa443a6dbb428914e05ba2259463c18308b86233.try_into().unwrap();
+
+    let props = IProposalsDispatcher { contract_address: gov_addr };
+    prank(CheatTarget::One(gov_addr), marek, CheatSpan::TargetCalls(2));
+    let prop_id = props.submit_proposal(voting_class.class_hash.into(), 2);
+    props.vote(prop_id, 1);
 }

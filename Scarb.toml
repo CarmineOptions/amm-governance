@@ -7,7 +7,7 @@ edition = "2023_11"
 
 [dependencies]
 cubit = { git = "https://github.com/influenceth/cubit.git", commit = "62756082bf2555d7ab25c69d9c7bc30574ff1ce8" }
-konoha = { git = "https://github.com/carmineoptions/konoha", branch = "remove-carmine" }
+konoha = { git = "https://github.com/carmineoptions/konoha", branch = "staking" }
 openzeppelin = { git = "https://github.com/OpenZeppelin/cairo-contracts.git", tag = "v0.10.0" }
 starknet = ">=2.0.0"
 

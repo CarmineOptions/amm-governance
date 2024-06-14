@@ -18,11 +18,10 @@ source = "git+https://github.com/influenceth/cubit.git#8eacc2b1d952d6266f9725776
 
 [[package]]
 name = "konoha"
-version = "0.4.0"
-source = "git+https://github.com/carmineoptions/konoha?branch=remove-carmine#29b63f952f07d89bf137c624570b03b32d381f2e"
+version = "0.5.0"
+source = "git+https://github.com/carmineoptions/konoha?branch=staking#d92fca4b33438ef5b29c83bcb984cac53a3080e2"
 dependencies = [
  "openzeppelin",
- "snforge_std",
 ]
 
 [[package]]

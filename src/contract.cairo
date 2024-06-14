@@ -13,10 +13,11 @@ pub trait ICarmineGovernance<TContractState> {
 #[starknet::contract]
 pub mod Governance {
     use konoha::airdrop::airdrop as airdrop_component;
-    use konoha::proposals::proposals as proposals_component;
-    use konoha::proposals::proposals::InternalTrait;
+    use amm_governance::proposals::proposals as proposals_component;
+    use amm_governance::proposals::proposals::InternalTrait;
     use konoha::types::{BlockNumber, VoteStatus, ContractType, PropDetails, CustomProposalConfig};
-    use konoha::upgrades::upgrades as upgrades_component;
+    use amm_governance::upgrades::upgrades as upgrades_component;
+    use konoha::staking::staking as staking_component;
 
     use starknet::ContractAddress;
 
@@ -24,6 +25,7 @@ pub mod Governance {
     component!(path: airdrop_component, storage: airdrop, event: AirdropEvent);
     component!(path: proposals_component, storage: proposals, event: ProposalsEvent);
     component!(path: upgrades_component, storage: upgrades, event: UpgradesEvent);
+    component!(path: staking_component, storage: staking, event: StakingEvent);
 
     #[abi(embed_v0)]
     impl Airdrop = airdrop_component::AirdropImpl<ContractState>;
@@ -33,6 +35,9 @@ pub mod Governance {
 
     #[abi(embed_v0)]
     impl Upgrades = upgrades_component::UpgradesImpl<ContractState>;
+
+    #[abi(embed_v0)]
+    impl Staking = staking_component::StakingImpl<ContractState>;
 
     #[storage]
     struct Storage {
@@ -45,33 +50,19 @@ pub mod Governance {
         airdrop: airdrop_component::Storage,
         #[substorage(v0)]
         upgrades: upgrades_component::Storage,
+        #[substorage(v0)]
+        staking: staking_component::Storage,
         migration_performed: bool
     }
 
-    // PROPOSALS
-
-    #[derive(starknet::Event, Drop)]
-    struct Proposed {
-        prop_id: felt252,
-        payload: felt252,
-        to_upgrade: ContractType
-    }
-
-    #[derive(starknet::Event, Drop)]
-    struct Voted {
-        prop_id: felt252,
-        voter: ContractAddress,
-        opinion: VoteStatus
-    }
 
     #[derive(starknet::Event, Drop)]
     #[event]
     enum Event {
-        Proposed: Proposed,
-        Voted: Voted,
         AirdropEvent: airdrop_component::Event,
         ProposalsEvent: proposals_component::Event,
-        UpgradesEvent: upgrades_component::Event
+        UpgradesEvent: upgrades_component::Event,
+        StakingEvent: staking_component::Event,
     }
 
     #[constructor]
