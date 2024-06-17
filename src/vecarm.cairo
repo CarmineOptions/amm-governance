@@ -52,8 +52,8 @@ pub mod VeCARM {
     #[constructor]
     fn constructor(ref self: ContractState, owner: ContractAddress) {
         // will not be called.
-        let name = "Konoha Sepolia Voting";
-        let symbol = "veKONOHA";
+        let name = "vote escrowed Carmine token";
+        let symbol = "veCARM";
 
         self.erc20.initializer(name, symbol);
         self.ownable.initializer(owner);

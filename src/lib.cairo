@@ -6,3 +6,4 @@ mod types;
 mod upgrades;
 mod vecarm;
 pub mod contract;
+mod staking;

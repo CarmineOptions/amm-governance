@@ -20,20 +20,6 @@ trait IProposals<TContractState> {
         ref self: TContractState, custom_proposal_type: u32, calldata: Span<felt252>
     ) -> u32;
     fn get_custom_proposal_type(self: @TContractState, i: u32) -> CustomProposalConfig;
-    fn delegate_vote(
-        ref self: TContractState,
-        to_addr: ContractAddress,
-        calldata: Array<(ContractAddress, u128)>,
-        amount: u128
-    );
-    fn withdraw_delegation(
-        ref self: TContractState,
-        to_addr: ContractAddress,
-        calldata: Array<(ContractAddress, u128)>,
-        amount: u128,
-        prop_id: felt252,
-    );
-    fn get_total_delegated_to(self: @TContractState, to_addr: ContractAddress) -> u128;
 }
 
 #[starknet::component]
@@ -318,12 +304,6 @@ pub(crate) mod proposals {
             self.proposal_voted_by.read((prop_id, user_address))
         }
 
-        fn get_total_delegated_to(
-            self: @ComponentState<TContractState>, to_addr: ContractAddress
-        ) -> u128 {
-            self.total_delegated_to.read(to_addr)
-        }
-
         fn submit_proposal(
             ref self: ComponentState<TContractState>, payload: felt252, to_upgrade: ContractType
         ) -> felt252 {
@@ -384,73 +364,6 @@ pub(crate) mod proposals {
         }
 
 
-        fn delegate_vote(
-            ref self: ComponentState<TContractState>,
-            to_addr: ContractAddress,
-            calldata: Array<(ContractAddress, u128)>,
-            amount: u128
-        ) {
-            let caller_addr = get_caller_address();
-            let stored_hash = self.delegate_hash.read(caller_addr);
-            let calldata_span: Span<(ContractAddress, u128)> = calldata.span();
-            assert(stored_hash == hashing(0, calldata_span, 0), 'incorrect delegate list');
-
-            let curr_total_delegated_to = self.total_delegated_to.read(to_addr);
-
-            // let gov_token_addr = self.get_governance_token_address();
-            let gov_token_addr = IGovernanceDispatcher { contract_address: get_contract_address() }
-                .get_governance_token_address();
-            let caller_balance_u256: u256 = IERC20Dispatcher { contract_address: gov_token_addr }
-                .balanceOf(caller_addr);
-            assert(caller_balance_u256.high == 0, 'CARM balance > u128');
-            let caller_balance: u128 = caller_balance_u256.low;
-            assert(caller_balance > 0, 'CARM balance is zero');
-
-            let already_delegated = self.find_already_delegated(to_addr, calldata_span, 0);
-            assert(caller_balance - already_delegated >= amount, 'Not enough funds');
-
-            let updated_list: Array<(ContractAddress, u128)> = array![(to_addr, amount)];
-            let updated_list_span = updated_list.span();
-
-            self
-                .update_calldata(
-                    to_addr, already_delegated + amount, calldata_span, updated_list, 0
-                );
-
-            self.delegate_hash.write(caller_addr, hashing(0, updated_list_span, 0));
-            self.total_delegated_to.write(to_addr, curr_total_delegated_to + amount);
-        }
-
-        fn withdraw_delegation(
-            ref self: ComponentState<TContractState>,
-            to_addr: ContractAddress,
-            calldata: Array<(ContractAddress, u128)>,
-            amount: u128,
-            prop_id: felt252,
-        ) {
-            let caller_addr = get_caller_address();
-            let stored_hash = self.delegate_hash.read(caller_addr);
-            let calldata_span: Span<(ContractAddress, u128)> = calldata.span();
-            assert(stored_hash == hashing(0, calldata_span, 0), 'incorrect delegate list');
-
-            let user_already_voted = self.get_user_voted(to_addr, prop_id);
-            assert(user_already_voted == 0, 'user already voted');
-
-            let max_power_to_withdraw: u128 = self
-                .find_already_delegated(to_addr, calldata_span, 0);
-            assert(max_power_to_withdraw >= amount, 'amount has to be lower');
-
-            let updated_list: Array<(ContractAddress, u128)> = ArrayTrait::new();
-            let updated_list_span = updated_list.span();
-            let minus_amount = max_power_to_withdraw - amount;
-            self.update_calldata(to_addr, minus_amount, calldata_span, updated_list, 0);
-
-            self.delegate_hash.write(caller_addr, hashing(0, updated_list_span, 0));
-
-            let curr_total_delegated_to = self.total_delegated_to.read(to_addr);
-            self.total_delegated_to.write(to_addr, curr_total_delegated_to - amount);
-        }
-
         fn vote(ref self: ComponentState<TContractState>, prop_id: felt252, opinion: felt252) {
             // Checks
             assert((opinion == 1) | (opinion == 2), 'opinion must be either 1 or 2');
@@ -473,7 +386,7 @@ pub(crate) mod proposals {
             let caller_balance: u128 = caller_balance_u256.low;
             assert(caller_balance != 0, 'voting token balance is zero');
 
-            let caller_voting_power = caller_balance + self.total_delegated_to.read(caller_addr);
+            let caller_voting_power = caller_balance;
 
             assert(caller_voting_power > 0, 'No voting power');
 

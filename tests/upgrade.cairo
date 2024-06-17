@@ -10,13 +10,16 @@ use konoha::proposals::IProposalsDispatcherTrait;
 use konoha::treasury::{ITreasuryDispatcher, ITreasuryDispatcherTrait};
 use konoha::upgrades::IUpgradesDispatcher;
 use konoha::upgrades::IUpgradesDispatcherTrait;
+use amm_governance::staking::{IStakingDispatcher, IStakingDispatcherTrait};
+use konoha::traits::{IERC20Dispatcher, IERC20DispatcherTrait};
+
 use openzeppelin::upgrades::interface::{IUpgradeableDispatcher, IUpgradeableDispatcherTrait};
 use snforge_std::{
     BlockId, declare, ContractClassTrait, ContractClass, start_prank, CheatTarget, prank, CheatSpan,
-    roll
+    roll, start_warp
 };
 use starknet::{ClassHash, ContractAddress, get_block_timestamp, get_block_number};
-use super::utils::{vote_on_proposal, IERC20Dispatcher, IERC20DispatcherTrait};
+use super::utils::vote_on_proposal;
 
 #[test]
 #[fork("MAINNET")]
@@ -139,16 +142,45 @@ fn scenario_airdrop_staked_carm() {
     .try_into()
     .unwrap();
 
-    let gov_class: ContractClass = declare("Governance").expect('unable to declare!');
-    let floating_class: ContractClass = declare("FloatingToken").expect('unable to declare floating');
-    let voting_class: ContractClass = declare("VotingToken").expect('unable to declare voting');
+    let gov_class: ContractClass = declare("Governance").expect('unable to declare gov');
+    let floating_class: ContractClass = declare("CARMToken").expect('unable to declare CARM');
+    let voting_class: ContractClass = declare("VeCARM").expect('unable to declare voting');
 
     let time_zero = get_block_timestamp();
 
     let marek: ContractAddress = 0x0011d341c6e841426448ff39aa443a6dbb428914e05ba2259463c18308b86233.try_into().unwrap();
+    let scaling: ContractAddress =
+    0x052df7acdfd3174241fa6bd5e1b7192cd133f8fc30a2a6ed99b0ddbfb5b22dcd
+    .try_into()
+    .unwrap();
+    let ondrej: ContractAddress = 0x0583a9d956d65628f806386ab5b12dccd74236a3c6b930ded9cf3c54efc722a1.try_into().unwrap();
 
     let props = IProposalsDispatcher { contract_address: gov_addr };
-    prank(CheatTarget::One(gov_addr), marek, CheatSpan::TargetCalls(2));
-    let prop_id = props.submit_proposal(voting_class.class_hash.into(), 2);
-    props.vote(prop_id, 1);
+    prank(CheatTarget::One(gov_addr), marek, CheatSpan::TargetCalls(6));
+    let prop_id_gov_upgrade = props.submit_proposal(gov_class.class_hash.into(), 1);
+    let prop_id_vecarm_upgrade = props.submit_proposal(voting_class.class_hash.into(), 2);
+    props.vote(prop_id_gov_upgrade, 1);
+    props.vote(prop_id_vecarm_upgrade, 1);
+    let prop_id_airdrop = props.submit_proposal(voting_class.class_hash.into(), 3); // simulate airdrop proposal, no merkle tree root yet
+    props.vote(prop_id_airdrop, 1);
+    prank(CheatTarget::One(gov_addr), scaling, CheatSpan::TargetCalls(3));
+    props.vote(prop_id_gov_upgrade, 1);
+    props.vote(prop_id_airdrop, 1);
+    props.vote(prop_id_vecarm_upgrade, 1);
+
+    let warped_timestamp = time_zero + consteval_int!(60 * 60 * 24 * 7) + 420;
+    start_warp(CheatTarget::One(gov_addr), warped_timestamp);
+    let upgrades = IUpgradesDispatcher {contract_address: gov_addr };
+    upgrades.apply_passed_proposal(prop_id_airdrop);
+    upgrades.apply_passed_proposal(prop_id_vecarm_upgrade);
+    upgrades.apply_passed_proposal(prop_id_gov_upgrade); // order is important! first others, then governance. would not work otherwise.
+
+    check_if_healthy(gov_addr);
+    let staking = IStakingDispatcher{contract_address: gov_addr };
+    staking.initialize_floating_token_address();
+    prank(CheatTarget::One(gov_addr), ondrej, CheatSpan::TargetCalls(1));
+    staking.unstake_airdrop(10000000000000000000);
+    let floating = IERC20Dispatcher { contract_address: floating_}
+    assert(floating_)
+
 }

@@ -17,7 +17,7 @@ pub mod Governance {
     use amm_governance::proposals::proposals::InternalTrait;
     use konoha::types::{BlockNumber, VoteStatus, ContractType, PropDetails, CustomProposalConfig};
     use amm_governance::upgrades::upgrades as upgrades_component;
-    use konoha::staking::staking as staking_component;
+    use amm_governance::staking::staking as staking_component;
 
     use starknet::ContractAddress;
 
