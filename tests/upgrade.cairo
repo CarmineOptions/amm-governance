@@ -198,6 +198,7 @@ fn scenario_airdrop_staked_carm() {
     println!("unstaking..");
     staking.unstake_airdrop(10000000000000000000);
     let floating = IERC20Dispatcher { contract_address: floating_addr };
+    println!("floating balance scaling: {:?}", floating.balance_of(scaling));
     assert(floating.balance_of(scaling) == 10000000000000000000, 'wrong bal floating scaling');
 
 }

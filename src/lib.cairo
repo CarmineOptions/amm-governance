@@ -1,10 +1,10 @@
-mod carm;
+pub mod carm;
 mod constants;
 mod options;
 mod proposals;
 mod traits;
 mod types;
 mod upgrades;
-mod vecarm;
+pub mod vecarm;
 pub mod contract;
 pub mod staking;
