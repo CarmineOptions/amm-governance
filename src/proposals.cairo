@@ -53,6 +53,8 @@ pub(crate) mod proposals {
     use konoha::traits::get_governance_token_address_self;
     use konoha::constants;
 
+    use amm_governance::staking::{IStakingDispatcher, IStakingDispatcherTrait};
+
     #[storage]
     struct Storage {
         proposal_details: LegacyMap::<felt252, PropDetails>,
@@ -386,7 +388,10 @@ pub(crate) mod proposals {
             let caller_balance: u128 = caller_balance_u256.low;
             assert(caller_balance != 0, 'voting token balance is zero');
 
-            let caller_voting_power = caller_balance;
+            let self_addr = get_contract_address();
+            let staking = IStakingDispatcher { contract_address: self_addr };
+            let caller_voting_power = staking.get_adjusted_voting_power(caller_addr);
+
 
             assert(caller_voting_power > 0, 'No voting power');
 

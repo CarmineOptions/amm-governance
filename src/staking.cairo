@@ -7,7 +7,7 @@ use starknet::ContractAddress;
 pub trait IStaking<TContractState> {
     fn stake(ref self: TContractState, length: u64, amount: u128) -> u32; // returns stake ID
     fn unstake(ref self: TContractState, id: u32);
-    fn unstake_airdrop(ref self: TContractState, amount: u128);
+    fn unstake_airdrop(ref self: TContractState);
 
     fn set_curve_point(ref self: TContractState, length: u64, conversion_rate: u16);
     fn set_floating_token_address(ref self: TContractState, address: ContractAddress);
@@ -16,11 +16,13 @@ pub trait IStaking<TContractState> {
     fn get_floating_token_address(self: @TContractState) -> ContractAddress;
     fn get_stake(self: @TContractState, address: ContractAddress, stake_id: u32) -> staking::Stake;
     fn get_total_voting_power(self: @TContractState, address: ContractAddress) -> u128;
+    fn get_adjusted_voting_power(self: @TContractState, address: ContractAddress) -> u128;
 }
 
 #[starknet::component]
 pub(crate) mod staking {
-    use starknet::{
+    use core::traits::Into;
+use starknet::{
         ContractAddress, get_block_timestamp, get_caller_address, get_contract_address, storage_access::StorePacking
     };
     use konoha::traits::{
@@ -28,6 +30,8 @@ pub(crate) mod staking {
     };
     use konoha::constants::UNLOCK_DATE;
     use core::zeroable::NonZero;
+    use core::option::OptionTrait;
+    use core::array::SpanTrait;
 
     #[derive(Copy, Drop, Serde)]
     pub(crate) struct Stake {
@@ -38,6 +42,7 @@ pub(crate) mod staking {
         withdrawn: bool
     }
 
+    const TWO_POW_32: u128 = 0x100000000;
     const TWO_POW_64: u128 = 0x10000000000000000;
     const TWO_POW_128: felt252 = 0x100000000000000000000000000000000;
     const TWO_POW_192: felt252 = 0x1000000000000000000000000000000000000000000000000;
@@ -114,6 +119,29 @@ pub(crate) mod staking {
         Staked: Staked,
         Unstaked: Unstaked,
         UnstakedAirdrop: UnstakedAirdrop
+    }
+
+    #[inline(always)]
+    fn get_team_addresses() -> @Span<felt252>{
+        let arr = array![0x0583a9d956d65628f806386ab5b12dccd74236a3c6b930ded9cf3c54efc722a1, 0x06717eaf502baac2b6b2c6ee3ac39b34a52e726a73905ed586e757158270a0af, 0x0011d341c6e841426448ff39aa443a6dbb428914e05ba2259463c18308b86233, 0x00d79a15d84f5820310db21f953a0fae92c95e25d93cb983cc0c27fc4c52273c, 0x03d1525605db970fa1724693404f5f64cba8af82ec4aab514e6ebd3dec4838ad, 0x06fd0529AC6d4515dA8E5f7B093e29ac0A546a42FB36C695c8f9D13c5f787f82, 0x04d2FE1Ff7c0181a4F473dCd982402D456385BAE3a0fc38C49C0A99A620d1abe, 0x062c290f0afa1ea2d6b6d11f6f8ffb8e626f796e13be1cf09b84b2edaa083472];
+        @arr.span()
+    }
+
+    fn is_team(potential_team_member_address: ContractAddress) -> bool {
+        let potential_address: felt252 = potential_team_member_address.into();
+        let mut team_addresses = *get_team_addresses();
+        loop {
+            match team_addresses.pop_front() {
+                Option::Some(addr) => {
+                    if(*addr == potential_address) {
+                        break true;
+                    }
+                },
+                Option::None(_) => {
+                    break false;
+                }
+            }
+        }
     }
 
     #[embeddable_as(StakingImpl)]
@@ -213,7 +241,7 @@ pub(crate) mod staking {
                 );
         }
 
-        fn unstake_airdrop(ref self: ComponentState<TContractState>, amount: u128) {
+        fn unstake_airdrop(ref self: ComponentState<TContractState>) {
             assert(get_block_timestamp() > UNLOCK_DATE, 'tokens not yet unlocked');
 
             let caller = get_caller_address();
@@ -279,6 +307,8 @@ pub(crate) mod staking {
             self.stake.read((address, stake_id))
         }
 
+        // returns total voting power, NOT adjusted for whether it's team or not
+        // counts only non-expired stakes, NOT airdropped tokens
         fn get_total_voting_power(
             self: @ComponentState<TContractState>, address: ContractAddress
         ) -> u128 {
@@ -296,6 +326,24 @@ pub(crate) mod staking {
                     acc += res.amount_voting_token;
                 }
             }
+        }
+
+        // returns voting power adjusted for whether the person is team or not
+        fn get_adjusted_voting_power(
+            self: @ComponentState<TContractState>, address: ContractAddress
+        ) -> u128 {
+            let nonadjusted_voting_power = self.get_total_voting_power(address);
+            if(!is_team(address)){
+                return nonadjusted_voting_power;
+            }
+            let total_supply: u128 = IERC20Dispatcher {contract_address: get_governance_token_address_self()}.total_supply().try_into().unwrap();
+            let total_team = self.get_total_team_voting_power();
+            let max_team_supply = total_supply / 4;
+            if(total_team < max_team_supply) {
+                return nonadjusted_voting_power;
+            }
+            let adj_factor = (TWO_POW_32 * total_team) / max_team_supply;
+            (adj_factor * nonadjusted_voting_power) / TWO_POW_32
         }
     }
 
@@ -333,6 +381,21 @@ pub(crate) mod staking {
                 id += 1;
                 if (!res.withdrawn) {
                     acc += res.amount_voting_token;
+                }
+            }
+        }
+
+        fn get_total_team_voting_power(self: @ComponentState<TContractState>) -> u128 {
+            let mut total: u128 = 0;
+            let mut team_addresses = *get_team_addresses();
+            loop {
+                match team_addresses.pop_front() {
+                    Option::Some(addr) => {
+                        total += self.get_total_voting_power((*addr).try_into().unwrap());
+                    },
+                    Option::None(_) => {
+                        break total;
+                    }
                 }
             }
         }
