@@ -267,9 +267,7 @@ pub(crate) mod staking {
             let voting_token = IERC20Dispatcher {
                 contract_address: get_governance_token_address_self()
             };
-            println!("burning");
             voting_token.burn(caller, to_unstake.into());
-            println!("burned");
             let floating_token = IERC20Dispatcher {
                 contract_address: self.floating_token_address.read()
             };
