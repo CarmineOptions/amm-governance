@@ -1,7 +1,7 @@
 // This is the locked Cairo token.
 
 #[starknet::interface]
-trait IVeCARM<TContractState> {
+pub trait IVeCARM<TContractState> {
     fn initializer(ref self: TContractState);
 }
 

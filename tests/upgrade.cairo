@@ -11,6 +11,7 @@ use konoha::treasury::{ITreasuryDispatcher, ITreasuryDispatcherTrait};
 use konoha::upgrades::IUpgradesDispatcher;
 use konoha::upgrades::IUpgradesDispatcherTrait;
 use amm_governance::staking::{IStakingDispatcher, IStakingDispatcherTrait};
+use amm_governance::vecarm::{IVeCARMDispatcher, IVeCARMDispatcherTrait};
 use konoha::traits::{IERC20Dispatcher, IERC20DispatcherTrait};
 use konoha::constants::UNLOCK_DATE;
 use openzeppelin::upgrades::interface::{IUpgradeableDispatcher, IUpgradeableDispatcherTrait};
@@ -134,6 +135,7 @@ fn test_upgrade_amm_back(amm: ContractAddress, owner: ContractAddress, new_class
     upgradable_amm.upgrade(new_classhash);
 }
 
+
 #[test]
 #[fork("MAINNET")]
 fn scenario_airdrop_staked_carm() {
@@ -141,6 +143,7 @@ fn scenario_airdrop_staked_carm() {
     0x001405ab78ab6ec90fba09e6116f373cda53b0ba557789a4578d8c1ec374ba0f
     .try_into()
     .unwrap();
+    let vecarm_addr: ContractAddress = 0x03c0286e9e428a130ae7fbbe911b794e8a829c367dd788e7cfe3efb0367548fa.try_into().unwrap();
 
     let gov_class: ContractClass = declare("Governance").expect('unable to declare gov');
     let floating_class: ContractClass = declare("CARMToken").expect('unable to declare CARM');
@@ -184,11 +187,15 @@ fn scenario_airdrop_staked_carm() {
     // can't apply passed proposal to upgrade vecarm because that would have to be a custom proposal under new governance
     upgrades.apply_passed_proposal(prop_id_gov_upgrade);
 
+    let vecarm = IVeCARMDispatcher { contract_address: vecarm_addr };
+    vecarm.initializer();
+
     check_if_healthy(gov_addr);
     let staking = IStakingDispatcher{contract_address: gov_addr };
     println!("initializing floating token address");
     staking.initialize_floating_token_address();
     prank(CheatTarget::One(gov_addr), scaling, CheatSpan::TargetCalls(1));
+    println!("unstaking..");
     staking.unstake_airdrop(10000000000000000000);
     let floating = IERC20Dispatcher { contract_address: floating_addr };
     assert(floating.balance_of(scaling) == 10000000000000000000, 'wrong bal floating scaling');
