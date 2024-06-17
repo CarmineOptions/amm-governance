@@ -12,7 +12,7 @@ use konoha::upgrades::IUpgradesDispatcher;
 use konoha::upgrades::IUpgradesDispatcherTrait;
 use amm_governance::staking::{IStakingDispatcher, IStakingDispatcherTrait};
 use konoha::traits::{IERC20Dispatcher, IERC20DispatcherTrait};
-
+use konoha::constants::UNLOCK_DATE;
 use openzeppelin::upgrades::interface::{IUpgradeableDispatcher, IUpgradeableDispatcherTrait};
 use snforge_std::{
     BlockId, declare, ContractClassTrait, ContractClass, start_prank, CheatTarget, prank, CheatSpan,
@@ -146,6 +146,13 @@ fn scenario_airdrop_staked_carm() {
     let floating_class: ContractClass = declare("CARMToken").expect('unable to declare CARM');
     let voting_class: ContractClass = declare("VeCARM").expect('unable to declare voting');
 
+    let mut floating_calldata = ArrayTrait::new();
+    floating_calldata.append(10000000000000000000000000); // fixed supply low
+    floating_calldata.append(0); // fixed supply high
+    floating_calldata.append(gov_addr.into());
+    floating_calldata.append(gov_addr.into());
+    let (floating_addr, _) = floating_class.deploy(@floating_calldata).unwrap();
+    println!("Floating addr: {:?}", floating_addr);
     let time_zero = get_block_timestamp();
 
     let marek: ContractAddress = 0x0011d341c6e841426448ff39aa443a6dbb428914e05ba2259463c18308b86233.try_into().unwrap();
@@ -169,18 +176,21 @@ fn scenario_airdrop_staked_carm() {
     props.vote(prop_id_vecarm_upgrade, 1);
 
     let warped_timestamp = time_zero + consteval_int!(60 * 60 * 24 * 7) + 420;
-    start_warp(CheatTarget::One(gov_addr), warped_timestamp);
+    start_warp(CheatTarget::One(gov_addr), warped_timestamp + UNLOCK_DATE);
     let upgrades = IUpgradesDispatcher {contract_address: gov_addr };
     upgrades.apply_passed_proposal(prop_id_airdrop);
     upgrades.apply_passed_proposal(prop_id_vecarm_upgrade);
-    upgrades.apply_passed_proposal(prop_id_gov_upgrade); // order is important! first others, then governance. would not work otherwise.
+    // order is important! first others, then governance. would not work otherwise.
+    // can't apply passed proposal to upgrade vecarm because that would have to be a custom proposal under new governance
+    upgrades.apply_passed_proposal(prop_id_gov_upgrade);
 
     check_if_healthy(gov_addr);
     let staking = IStakingDispatcher{contract_address: gov_addr };
+    println!("initializing floating token address");
     staking.initialize_floating_token_address();
-    prank(CheatTarget::One(gov_addr), ondrej, CheatSpan::TargetCalls(1));
+    prank(CheatTarget::One(gov_addr), scaling, CheatSpan::TargetCalls(1));
     staking.unstake_airdrop(10000000000000000000);
-    let floating = IERC20Dispatcher { contract_address: floating_}
-    assert(floating_)
+    let floating = IERC20Dispatcher { contract_address: floating_addr };
+    assert(floating.balance_of(scaling) == 10000000000000000000, 'wrong bal floating scaling');
 
 }

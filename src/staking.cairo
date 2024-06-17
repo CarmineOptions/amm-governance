@@ -4,7 +4,7 @@ use starknet::ContractAddress;
 // TODO add later unstaking for team&investors
 
 #[starknet::interface]
-pub(crate) trait IStaking<TContractState> {
+pub trait IStaking<TContractState> {
     fn stake(ref self: TContractState, length: u64, amount: u128) -> u32; // returns stake ID
     fn unstake(ref self: TContractState, id: u32);
     fn unstake_airdrop(ref self: TContractState, amount: u128);
@@ -266,8 +266,8 @@ pub(crate) mod staking {
             ref self: ComponentState<TContractState>
         ) {
             let curr = self.floating_token_address.read();
-            assert(curr.into() == 0, 'floating token already initialized');
-            let default_address: ContractAddress = 0x12.try_into().unwrap(); // TODO fix
+            assert(curr.into() == 0, 'floating token already init');
+            let default_address: ContractAddress = 0x71cc3fbda6eb62d60c57c84eb995338fcb74a31dfb58e64f88185d1ac8ae8b8.try_into().unwrap(); // TODO fix
             self.floating_token_address.write(default_address);
         }
 
