@@ -28,7 +28,7 @@ use starknet::{
     use konoha::traits::{
         get_governance_token_address_self, IERC20Dispatcher, IERC20DispatcherTrait
     };
-    use konoha::constants::UNLOCK_DATE;
+    use amm_governance::constants::UNLOCK_DATE;
     use core::zeroable::NonZero;
     use core::option::OptionTrait;
     use core::array::SpanTrait;
@@ -242,9 +242,10 @@ use starknet::{
         }
 
         fn unstake_airdrop(ref self: ComponentState<TContractState>) {
-            assert(get_block_timestamp() > UNLOCK_DATE, 'tokens not yet unlocked');
-
             let caller = get_caller_address();
+            if(is_team(caller)){
+                assert(get_block_timestamp() > UNLOCK_DATE, 'tokens not yet unlocked');
+            }
 
             let total_staked = self.get_total_staked_accounted(caller); // manually staked tokens
             let voting_token = IERC20Dispatcher {
