@@ -24,36 +24,35 @@ trait IProposals<TContractState> {
 
 #[starknet::component]
 pub(crate) mod proposals {
-    use super::IProposals;
-    use konoha::contract::IGovernance;
-    use konoha::contract::IGovernanceDispatcher;
-    use konoha::contract::IGovernanceDispatcherTrait;
-    use core::traits::TryInto;
-    use core::option::OptionTrait;
-    use core::traits::Into;
-    use core::box::BoxTrait;
+    use amm_governance::staking::{IStakingDispatcher, IStakingDispatcherTrait};
 
     use core::array::{ArrayTrait, SpanTrait};
+    use core::box::BoxTrait;
     use core::clone::Clone;
 
     use core::hash::LegacyHash;
-    use starknet::get_block_info;
-    use starknet::get_block_timestamp;
-    use starknet::get_caller_address;
-    use starknet::BlockInfo;
-    use starknet::ContractAddress;
-    use starknet::ClassHash;
-    use starknet::contract_address_const;
-    use starknet::event::EventEmitter;
-    use starknet::get_contract_address;
-
-    use konoha::types::{BlockNumber, ContractType, CustomProposalConfig, PropDetails, VoteStatus};
+    use core::option::OptionTrait;
+    use core::traits::Into;
+    use core::traits::TryInto;
+    use konoha::constants;
+    use konoha::contract::IGovernance;
+    use konoha::contract::IGovernanceDispatcher;
+    use konoha::contract::IGovernanceDispatcherTrait;
     use konoha::traits::IERC20Dispatcher;
     use konoha::traits::IERC20DispatcherTrait;
     use konoha::traits::get_governance_token_address_self;
-    use konoha::constants;
 
-    use amm_governance::staking::{IStakingDispatcher, IStakingDispatcherTrait};
+    use konoha::types::{BlockNumber, ContractType, CustomProposalConfig, PropDetails, VoteStatus};
+    use starknet::BlockInfo;
+    use starknet::ClassHash;
+    use starknet::ContractAddress;
+    use starknet::contract_address_const;
+    use starknet::event::EventEmitter;
+    use starknet::get_block_info;
+    use starknet::get_block_timestamp;
+    use starknet::get_caller_address;
+    use starknet::get_contract_address;
+    use super::IProposals;
 
     #[storage]
     struct Storage {
@@ -391,7 +390,6 @@ pub(crate) mod proposals {
             let self_addr = get_contract_address();
             let staking = IStakingDispatcher { contract_address: self_addr };
             let caller_voting_power = staking.get_adjusted_voting_power(caller_addr);
-
 
             assert(caller_voting_power > 0, 'No voting power');
 

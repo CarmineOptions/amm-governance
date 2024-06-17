@@ -5,26 +5,25 @@ trait IUpgrades<TContractState> {
 
 #[starknet::component]
 pub(crate) mod upgrades {
-    use core::result::ResultTrait;
+    use amm_governance::proposals::proposals as proposals_component;
+    use amm_governance::proposals::proposals::ProposalsImpl;
     use core::array::ArrayTrait;
     use core::option::OptionTrait;
     use core::panic_with_felt252;
-
-    use starknet::SyscallResultTrait;
-    use starknet::SyscallResult;
-    use starknet::syscalls;
-    use starknet::ClassHash;
-    use starknet::ContractAddress;
-    use starknet::class_hash;
+    use core::result::ResultTrait;
+    use konoha::airdrop::airdrop as airdrop_component;
+    use konoha::contract::Governance::ContractState;
+    use konoha::contract::Governance;
+    use konoha::traits::get_governance_token_address_self;
 
     use konoha::types::{CustomProposalConfig, PropDetails};
-    use konoha::contract::Governance;
-    use konoha::contract::Governance::ContractState;
+    use starknet::ClassHash;
+    use starknet::ContractAddress;
+    use starknet::SyscallResult;
 
-    use amm_governance::proposals::proposals as proposals_component;
-    use amm_governance::proposals::proposals::ProposalsImpl;
-    use konoha::airdrop::airdrop as airdrop_component;
-    use konoha::traits::get_governance_token_address_self;
+    use starknet::SyscallResultTrait;
+    use starknet::class_hash;
+    use starknet::syscalls;
 
     #[storage]
     struct Storage {

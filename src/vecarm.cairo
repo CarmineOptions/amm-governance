@@ -7,15 +7,15 @@ pub trait IVeCARM<TContractState> {
 
 #[starknet::contract]
 pub mod VeCARM {
-    use openzeppelin::token::erc20::erc20::ERC20Component::{InternalTrait, ERC20MetadataImpl};
-    use openzeppelin::access::ownable::ownable::OwnableComponent::InternalTrait as OwnableInternalTrait;
-    use openzeppelin::token::erc20::{ERC20Component};
-    use starknet::{ClassHash, ContractAddress};
+    use konoha::traits::IERC20;
     use openzeppelin::access::ownable::OwnableComponent;
     use openzeppelin::access::ownable::interface::IOwnableTwoStep;
-    use konoha::traits::IERC20;
-    use openzeppelin::upgrades::upgradeable::UpgradeableComponent;
+    use openzeppelin::access::ownable::ownable::OwnableComponent::InternalTrait as OwnableInternalTrait;
+    use openzeppelin::token::erc20::erc20::ERC20Component::{InternalTrait, ERC20MetadataImpl};
+    use openzeppelin::token::erc20::{ERC20Component};
     use openzeppelin::upgrades::interface::IUpgradeable;
+    use openzeppelin::upgrades::upgradeable::UpgradeableComponent;
+    use starknet::{ClassHash, ContractAddress};
 
     component!(path: ERC20Component, storage: erc20, event: ERC20Event);
     component!(path: UpgradeableComponent, storage: upgradeable, event: UpgradeableEvent);
@@ -63,9 +63,9 @@ pub mod VeCARM {
     impl VeCARM of super::IVeCARM<ContractState> {
         fn initializer(ref self: ContractState) {
             let gov_addr: ContractAddress =
-            0x001405ab78ab6ec90fba09e6116f373cda53b0ba557789a4578d8c1ec374ba0f
-            .try_into()
-            .unwrap();
+                0x001405ab78ab6ec90fba09e6116f373cda53b0ba557789a4578d8c1ec374ba0f
+                .try_into()
+                .unwrap();
             self.ownable.initializer(gov_addr);
         }
     }

@@ -12,12 +12,12 @@ pub trait ICarmineGovernance<TContractState> {
 
 #[starknet::contract]
 pub mod Governance {
-    use konoha::airdrop::airdrop as airdrop_component;
     use amm_governance::proposals::proposals as proposals_component;
     use amm_governance::proposals::proposals::InternalTrait;
-    use konoha::types::{BlockNumber, VoteStatus, ContractType, PropDetails, CustomProposalConfig};
-    use amm_governance::upgrades::upgrades as upgrades_component;
     use amm_governance::staking::staking as staking_component;
+    use amm_governance::upgrades::upgrades as upgrades_component;
+    use konoha::airdrop::airdrop as airdrop_component;
+    use konoha::types::{BlockNumber, VoteStatus, ContractType, PropDetails, CustomProposalConfig};
 
     use starknet::ContractAddress;
 

@@ -2,18 +2,18 @@ use amm_governance::contract::{
     IMigrateDispatcher, IMigrateDispatcherTrait, ICarmineGovernanceDispatcher,
     ICarmineGovernanceDispatcherTrait
 };
+use amm_governance::staking::{IStakingDispatcher, IStakingDispatcherTrait};
+use amm_governance::vecarm::{IVeCARMDispatcher, IVeCARMDispatcherTrait};
 use core::num::traits::Zero;
+use konoha::constants::UNLOCK_DATE;
 use konoha::contract::IGovernanceDispatcher;
 use konoha::contract::IGovernanceDispatcherTrait;
 use konoha::proposals::IProposalsDispatcher;
 use konoha::proposals::IProposalsDispatcherTrait;
+use konoha::traits::{IERC20Dispatcher, IERC20DispatcherTrait};
 use konoha::treasury::{ITreasuryDispatcher, ITreasuryDispatcherTrait};
 use konoha::upgrades::IUpgradesDispatcher;
 use konoha::upgrades::IUpgradesDispatcherTrait;
-use amm_governance::staking::{IStakingDispatcher, IStakingDispatcherTrait};
-use amm_governance::vecarm::{IVeCARMDispatcher, IVeCARMDispatcherTrait};
-use konoha::traits::{IERC20Dispatcher, IERC20DispatcherTrait};
-use konoha::constants::UNLOCK_DATE;
 use openzeppelin::upgrades::interface::{IUpgradeableDispatcher, IUpgradeableDispatcherTrait};
 use snforge_std::{
     BlockId, declare, ContractClassTrait, ContractClass, start_prank, CheatTarget, prank, CheatSpan,
@@ -60,11 +60,11 @@ fn test_deposit_to_amm_from_treasury(gov_contract_addr: ContractAddress) {
     let treasury_class: ContractClass = declare("Treasury").expect('unable to declare Treasury');
     let mut treasury_deploy_calldata = ArrayTrait::new();
     treasury_deploy_calldata.append(gov_contract_addr.into());
-    let amm_addr: ContractAddress = 0x047472e6755afc57ada9550b6a3ac93129cc4b5f98f51c73e0644d129fd208d9.try_into().unwrap();
-    treasury_deploy_calldata
-        .append(
-            amm_addr.into()
-        );
+    let amm_addr: ContractAddress =
+        0x047472e6755afc57ada9550b6a3ac93129cc4b5f98f51c73e0644d129fd208d9
+        .try_into()
+        .unwrap();
+    treasury_deploy_calldata.append(amm_addr.into());
     let (treasury_address, _) = treasury_class
         .deploy(@treasury_deploy_calldata)
         .expect('unable to deploy treasury');
@@ -141,10 +141,13 @@ fn test_upgrade_amm_back(amm: ContractAddress, owner: ContractAddress, new_class
 #[fork("MAINNET")]
 fn scenario_airdrop_staked_carm() {
     let gov_addr: ContractAddress =
-    0x001405ab78ab6ec90fba09e6116f373cda53b0ba557789a4578d8c1ec374ba0f
-    .try_into()
-    .unwrap();
-    let vecarm_addr: ContractAddress = 0x03c0286e9e428a130ae7fbbe911b794e8a829c367dd788e7cfe3efb0367548fa.try_into().unwrap();
+        0x001405ab78ab6ec90fba09e6116f373cda53b0ba557789a4578d8c1ec374ba0f
+        .try_into()
+        .unwrap();
+    let vecarm_addr: ContractAddress =
+        0x03c0286e9e428a130ae7fbbe911b794e8a829c367dd788e7cfe3efb0367548fa
+        .try_into()
+        .unwrap();
 
     let gov_class: ContractClass = declare("Governance").expect('unable to declare gov');
     let floating_class: ContractClass = declare("CARMToken").expect('unable to declare CARM');
@@ -159,12 +162,16 @@ fn scenario_airdrop_staked_carm() {
     println!("Floating addr: {:?}", floating_addr);
     let time_zero = get_block_timestamp();
 
-    let marek: ContractAddress = 0x0011d341c6e841426448ff39aa443a6dbb428914e05ba2259463c18308b86233.try_into().unwrap();
+    let marek: ContractAddress = 0x0011d341c6e841426448ff39aa443a6dbb428914e05ba2259463c18308b86233
+        .try_into()
+        .unwrap();
     let scaling: ContractAddress =
-    0x052df7acdfd3174241fa6bd5e1b7192cd133f8fc30a2a6ed99b0ddbfb5b22dcd
-    .try_into()
-    .unwrap();
-    let ondrej: ContractAddress = 0x0583a9d956d65628f806386ab5b12dccd74236a3c6b930ded9cf3c54efc722a1.try_into().unwrap();
+        0x052df7acdfd3174241fa6bd5e1b7192cd133f8fc30a2a6ed99b0ddbfb5b22dcd
+        .try_into()
+        .unwrap();
+    let ondrej: ContractAddress = 0x0583a9d956d65628f806386ab5b12dccd74236a3c6b930ded9cf3c54efc722a1
+        .try_into()
+        .unwrap();
 
     let props = IProposalsDispatcher { contract_address: gov_addr };
     prank(CheatTarget::One(gov_addr), marek, CheatSpan::TargetCalls(6));
@@ -172,7 +179,10 @@ fn scenario_airdrop_staked_carm() {
     let prop_id_vecarm_upgrade = props.submit_proposal(voting_class.class_hash.into(), 2);
     props.vote(prop_id_gov_upgrade, 1);
     props.vote(prop_id_vecarm_upgrade, 1);
-    let prop_id_airdrop = props.submit_proposal(voting_class.class_hash.into(), 3); // simulate airdrop proposal, no merkle tree root yet
+    let prop_id_airdrop = props
+        .submit_proposal(
+            voting_class.class_hash.into(), 3
+        ); // simulate airdrop proposal, no merkle tree root yet
     props.vote(prop_id_airdrop, 1);
     prank(CheatTarget::One(gov_addr), scaling, CheatSpan::TargetCalls(3));
     props.vote(prop_id_gov_upgrade, 1);
@@ -181,7 +191,7 @@ fn scenario_airdrop_staked_carm() {
 
     let warped_timestamp = time_zero + consteval_int!(60 * 60 * 24 * 7) + 420;
     start_warp(CheatTarget::One(gov_addr), warped_timestamp + UNLOCK_DATE);
-    let upgrades = IUpgradesDispatcher {contract_address: gov_addr };
+    let upgrades = IUpgradesDispatcher { contract_address: gov_addr };
     upgrades.apply_passed_proposal(prop_id_airdrop);
     upgrades.apply_passed_proposal(prop_id_vecarm_upgrade);
     // order is important! first others, then governance. would not work otherwise.
@@ -193,7 +203,7 @@ fn scenario_airdrop_staked_carm() {
     let voting = IERC20Dispatcher { contract_address: vecarm_addr };
 
     check_if_healthy(gov_addr);
-    let staking = IStakingDispatcher{contract_address: gov_addr };
+    let staking = IStakingDispatcher { contract_address: gov_addr };
     println!("initializing floating token address");
     staking.initialize_floating_token_address();
     prank(CheatTarget::One(gov_addr), scaling, CheatSpan::TargetCalls(1));
@@ -202,5 +212,4 @@ fn scenario_airdrop_staked_carm() {
     staking.unstake_airdrop();
     let floating = IERC20Dispatcher { contract_address: floating_addr };
     assert(floating.balance_of(scaling) == bal_before_unstake, 'wrong bal floating scaling');
-
 }

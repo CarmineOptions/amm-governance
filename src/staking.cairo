@@ -21,17 +21,18 @@ pub trait IStaking<TContractState> {
 
 #[starknet::component]
 pub(crate) mod staking {
+    use amm_governance::constants::UNLOCK_DATE;
+    use core::array::SpanTrait;
+    use core::option::OptionTrait;
     use core::traits::Into;
-use starknet::{
-        ContractAddress, get_block_timestamp, get_caller_address, get_contract_address, storage_access::StorePacking
-    };
+    use core::zeroable::NonZero;
     use konoha::traits::{
         get_governance_token_address_self, IERC20Dispatcher, IERC20DispatcherTrait
     };
-    use amm_governance::constants::UNLOCK_DATE;
-    use core::zeroable::NonZero;
-    use core::option::OptionTrait;
-    use core::array::SpanTrait;
+    use starknet::{
+        ContractAddress, get_block_timestamp, get_caller_address, get_contract_address,
+        storage_access::StorePacking
+    };
 
     #[derive(Copy, Drop, Serde)]
     pub(crate) struct Stake {
@@ -122,8 +123,17 @@ use starknet::{
     }
 
     #[inline(always)]
-    fn get_team_addresses() -> @Span<felt252>{
-        let arr = array![0x0583a9d956d65628f806386ab5b12dccd74236a3c6b930ded9cf3c54efc722a1, 0x06717eaf502baac2b6b2c6ee3ac39b34a52e726a73905ed586e757158270a0af, 0x0011d341c6e841426448ff39aa443a6dbb428914e05ba2259463c18308b86233, 0x00d79a15d84f5820310db21f953a0fae92c95e25d93cb983cc0c27fc4c52273c, 0x03d1525605db970fa1724693404f5f64cba8af82ec4aab514e6ebd3dec4838ad, 0x06fd0529AC6d4515dA8E5f7B093e29ac0A546a42FB36C695c8f9D13c5f787f82, 0x04d2FE1Ff7c0181a4F473dCd982402D456385BAE3a0fc38C49C0A99A620d1abe, 0x062c290f0afa1ea2d6b6d11f6f8ffb8e626f796e13be1cf09b84b2edaa083472];
+    fn get_team_addresses() -> @Span<felt252> {
+        let arr = array![
+            0x0583a9d956d65628f806386ab5b12dccd74236a3c6b930ded9cf3c54efc722a1,
+            0x06717eaf502baac2b6b2c6ee3ac39b34a52e726a73905ed586e757158270a0af,
+            0x0011d341c6e841426448ff39aa443a6dbb428914e05ba2259463c18308b86233,
+            0x00d79a15d84f5820310db21f953a0fae92c95e25d93cb983cc0c27fc4c52273c,
+            0x03d1525605db970fa1724693404f5f64cba8af82ec4aab514e6ebd3dec4838ad,
+            0x06fd0529AC6d4515dA8E5f7B093e29ac0A546a42FB36C695c8f9D13c5f787f82,
+            0x04d2FE1Ff7c0181a4F473dCd982402D456385BAE3a0fc38C49C0A99A620d1abe,
+            0x062c290f0afa1ea2d6b6d11f6f8ffb8e626f796e13be1cf09b84b2edaa083472
+        ];
         @arr.span()
     }
 
@@ -132,14 +142,10 @@ use starknet::{
         let mut team_addresses = *get_team_addresses();
         loop {
             match team_addresses.pop_front() {
-                Option::Some(addr) => {
-                    if(*addr == potential_address) {
-                        break true;
-                    }
-                },
-                Option::None(_) => {
-                    break false;
-                }
+                Option::Some(addr) => { if (*addr == potential_address) {
+                    break true;
+                } },
+                Option::None(_) => { break false; }
             }
         }
     }
@@ -243,7 +249,7 @@ use starknet::{
 
         fn unstake_airdrop(ref self: ComponentState<TContractState>) {
             let caller = get_caller_address();
-            if(is_team(caller)){
+            if (is_team(caller)) {
                 assert(get_block_timestamp() > UNLOCK_DATE, 'tokens not yet unlocked');
             }
 
@@ -293,12 +299,13 @@ use starknet::{
             self.floating_token_address.read()
         }
 
-        fn initialize_floating_token_address(
-            ref self: ComponentState<TContractState>
-        ) {
+        fn initialize_floating_token_address(ref self: ComponentState<TContractState>) {
             let curr = self.floating_token_address.read();
             assert(curr.into() == 0, 'floating token already init');
-            let default_address: ContractAddress = 0x71cc3fbda6eb62d60c57c84eb995338fcb74a31dfb58e64f88185d1ac8ae8b8.try_into().unwrap(); // TODO fix
+            let default_address: ContractAddress =
+                0x71cc3fbda6eb62d60c57c84eb995338fcb74a31dfb58e64f88185d1ac8ae8b8
+                .try_into()
+                .unwrap(); // TODO fix
             self.floating_token_address.write(default_address);
         }
 
@@ -334,13 +341,18 @@ use starknet::{
             self: @ComponentState<TContractState>, address: ContractAddress
         ) -> u128 {
             let nonadjusted_voting_power = self.get_total_voting_power(address);
-            if(!is_team(address)){
+            if (!is_team(address)) {
                 return nonadjusted_voting_power;
             }
-            let total_supply: u128 = IERC20Dispatcher {contract_address: get_governance_token_address_self()}.total_supply().try_into().unwrap();
+            let total_supply: u128 = IERC20Dispatcher {
+                contract_address: get_governance_token_address_self()
+            }
+                .total_supply()
+                .try_into()
+                .unwrap();
             let total_team = self.get_total_team_voting_power();
             let max_team_supply = total_supply / 4;
-            if(total_team < max_team_supply) {
+            if (total_team < max_team_supply) {
                 return nonadjusted_voting_power;
             }
             let adj_factor = (TWO_POW_32 * total_team) / max_team_supply;
@@ -394,9 +406,7 @@ use starknet::{
                     Option::Some(addr) => {
                         total += self.get_total_voting_power((*addr).try_into().unwrap());
                     },
-                    Option::None(_) => {
-                        break total;
-                    }
+                    Option::None(_) => { break total; }
                 }
             }
         }
