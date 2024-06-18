@@ -112,6 +112,7 @@ fn test_unstake_airdrop() {
     println!("Unstaking Airdrop Scaling");
     staking.unstake_airdrop(1); // TODO: should require no arg
     let floating = IERC20Dispatcher { contract_address: floating_addr };
+    let voting = IERC20Dispatcher { contract_address: vecarm_addr };
     println!("floating balance scaling: {:?}", floating.balance_of(scaling));
     assert(floating.balance_of(scaling) == 529593807488384830000000, 'wrong bal floating scaling');
 
@@ -119,18 +120,34 @@ fn test_unstake_airdrop() {
     let airdrops = IAirdropDispatcher {contract_address: gov_addr};
     airdrops.claim(scaling, SCALING_AIRDROP_AMOUNT, SCALING_AIRDROP_CALLDATA());
 
+    assert(voting.balance_of(scaling) == 100000000000000000000000, 'wrong bal floating scaling');
+    println!("Unstaking Airdrop Scaling Again");
+    prank(CheatTarget::One(gov_addr), scaling, CheatSpan::TargetCalls(1));
+    staking.unstake_airdrop(1); // TODO: should require no arg
+    assert(floating.balance_of(scaling) == 629593807488384830000000, 'wrong bal floating scaling');
+
+    // Claim all airdrops
+    airdrops.claim(marek, MAREK_AIRDROP_AMOUNT, MAREK_AIRDROP_CALLDATA());
+    airdrops.claim(ondrej, ONDREJ_AIRDROP_AMOUNT, ONDREJ_AIRDROP_CALLDATA());
+    airdrops.claim(carlotte, CARLOTTE_AIRDROP_AMOUNT, CARLOTTE_AIRDROP_CALLDATA());
+    airdrops.claim(random_user, RANDOM_USER_AIRDROP_AMOUNT, RANDOM_USER_AIRDROP_CALLDATA());
+
+    // Unstake all airdrops
+    prank(CheatTarget::One(gov_addr), marek, CheatSpan::TargetCalls(1));
+    staking.unstake_airdrop(1); // TODO: should require no arg
+
+    prank(CheatTarget::One(gov_addr), ondrej, CheatSpan::TargetCalls(1));
+    staking.unstake_airdrop(1); // TODO: should require no arg
+
+    prank(CheatTarget::One(gov_addr), carlotte, CheatSpan::TargetCalls(1));
+    staking.unstake_airdrop(1); // TODO: should require no arg
+
+    prank(CheatTarget::One(gov_addr), random_user, CheatSpan::TargetCalls(1));
+    staking.unstake_airdrop(1); // TODO: should require no arg
 
     
-    println!("floating balance scaling: {:?}", floating.balance_of(scaling));
-    // assert(floating.balance_of(scaling) == 629593807488384830000000, 'wrong bal floating scaling');
-    println!("Unstaking Airdrop Scaling Again");
-    staking.unstake_airdrop(1); // TODO: should require no arg
-    // let floating = IERC20Dispatcher { contract_address: floating_addr };
-    // println!("floating balance scaling: {:?}", floating.balance_of(scaling));
-    // assert(floating.balance_of(scaling) == 629593807488384830000000, 'wrong bal floating scaling');
+}   
 
-
-}
 
 const MAREK_AIRDROP_AMOUNT: u128 = 300000000000000000000000;
 fn MAREK_AIRDROP_CALLDATA()-> Array<felt252> {
