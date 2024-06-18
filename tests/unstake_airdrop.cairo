@@ -15,7 +15,6 @@ use konoha::airdrop::{IAirdropDispatcher, IAirdropDispatcherTrait};
 use amm_governance::staking::{IStakingDispatcher, IStakingDispatcherTrait};
 use amm_governance::vecarm::{IVeCARMDispatcher, IVeCARMDispatcherTrait};
 use konoha::traits::{IERC20Dispatcher, IERC20DispatcherTrait};
-use konoha::constants::UNLOCK_DATE;
 use openzeppelin::upgrades::interface::{IUpgradeableDispatcher, IUpgradeableDispatcherTrait};
 use snforge_std::{
     BlockId, declare, ContractClassTrait, ContractClass, start_prank, CheatTarget, prank, CheatSpan,
@@ -30,6 +29,9 @@ fn check_if_healthy(gov_contract_addr: ContractAddress) -> bool {
     let prop_details = dispatcher.get_proposal_details(0);
     (prop_details.payload + prop_details.to_upgrade) != 0
 }
+
+// TODO: Remove this 
+const UNLOCK_DATE: u64 = 1722470399;
 
 #[test]
 #[fork("MAINNET")]
@@ -109,7 +111,7 @@ fn test_unstake_airdrop() {
 
     prank(CheatTarget::One(gov_addr), scaling, CheatSpan::TargetCalls(1));
     println!("Unstaking Airdrop Scaling");
-    staking.unstake_airdrop(1); // TODO: should require no arg
+    staking.unstake_airdrop(); 
     let floating = IERC20Dispatcher { contract_address: floating_addr };
     let voting = IERC20Dispatcher { contract_address: vecarm_addr };
     println!("floating balance scaling: {:?}", floating.balance_of(scaling));
@@ -122,7 +124,7 @@ fn test_unstake_airdrop() {
     assert(voting.balance_of(scaling) == 100000000000000000000000, 'wrong bal floating scaling');
     println!("Unstaking Airdrop Scaling Again");
     prank(CheatTarget::One(gov_addr), scaling, CheatSpan::TargetCalls(1));
-    staking.unstake_airdrop(1); // TODO: should require no arg
+    staking.unstake_airdrop(); 
     assert(floating.balance_of(scaling) == 629593807488384830000000, 'wrong bal floating scaling');
 
     // Claim all airdrops
@@ -133,16 +135,16 @@ fn test_unstake_airdrop() {
 
     // Unstake all airdrops
     prank(CheatTarget::One(gov_addr), marek, CheatSpan::TargetCalls(1));
-    staking.unstake_airdrop(1); // TODO: should require no arg
+    staking.unstake_airdrop(); 
 
     prank(CheatTarget::One(gov_addr), ondrej, CheatSpan::TargetCalls(1));
-    staking.unstake_airdrop(1); // TODO: should require no arg
+    staking.unstake_airdrop(); 
 
     prank(CheatTarget::One(gov_addr), carlotte, CheatSpan::TargetCalls(1));
-    staking.unstake_airdrop(1); // TODO: should require no arg
+    staking.unstake_airdrop(); 
 
     prank(CheatTarget::One(gov_addr), random_user, CheatSpan::TargetCalls(1));
-    staking.unstake_airdrop(1); // TODO: should require no arg
+    staking.unstake_airdrop(); 
 
 }   
 
@@ -173,11 +175,7 @@ fn test_unstake_airdrop_unstake_again_failing() {
     let time_zero = get_block_timestamp();
 
     let marek: ContractAddress = 0x0011d341c6e841426448ff39aa443a6dbb428914e05ba2259463c18308b86233.try_into().unwrap(); // Team
-    let ondrej: ContractAddress = 0x0583a9d956d65628f806386ab5b12dccd74236a3c6b930ded9cf3c54efc722a1.try_into().unwrap(); // Team
     let scaling: ContractAddress = 0x052df7acdfd3174241fa6bd5e1b7192cd133f8fc30a2a6ed99b0ddbfb5b22dcd.try_into().unwrap(); // Not team
-    let carlotte: ContractAddress = 0x21b2b25dd73bc60b0549683653081f8963562cbe5cba2d123ec0cbcbf0913e4.try_into().unwrap(); // Not team
-    let random_user: ContractAddress = 0x539577df56aab4269c13ece28baff916ef08c26ba480142a3ce1739d2e848d9.try_into().unwrap(); // Not team
-
 
     let props = IProposalsDispatcher { contract_address: gov_addr };
     prank(CheatTarget::One(gov_addr), marek, CheatSpan::TargetCalls(6));
@@ -226,12 +224,12 @@ fn test_unstake_airdrop_unstake_again_failing() {
 
     prank(CheatTarget::One(gov_addr), scaling, CheatSpan::TargetCalls(1));
     println!("Unstaking Airdrop Scaling");
-    staking.unstake_airdrop(1); // TODO: should require no arg
+    staking.unstake_airdrop(); 
     let floating = IERC20Dispatcher { contract_address: floating_addr };
     assert(floating.balance_of(scaling) == 529593807488384830000000, 'wrong bal floating scaling');
 
     // Try to unstake again
-    staking.unstake_airdrop(1); // TODO: should require no arg
+    staking.unstake_airdrop();
 }   
 
 
