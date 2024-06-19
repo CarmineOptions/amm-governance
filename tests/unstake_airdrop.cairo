@@ -123,7 +123,7 @@ fn test_unstake_airdrop() {
     println!("Unstaking Airdrop random_user_1 Again");
     prank(CheatTarget::One(gov_addr), random_user_1, CheatSpan::TargetCalls(1));
     staking.unstake_airdrop(); 
-    assert(floating.balance_of(random_user_1) == 629593807488384830000000, 'wrong bal floating rndusr1');
+    assert(floating.balance_of(random_user_1) == RANDOM_USER_1_AIRDROP_AMOUNT.into(), 'wrong bal floating rndusr1');
 
     // Claim all airdrops
     airdrops.claim(team_member_1, TEAM_MEMBER_1_AIRDROP_AMOUNT, TEAM_MEMBER_1_AIRDROP_CALLDATA());
@@ -140,9 +140,11 @@ fn test_unstake_airdrop() {
 
     prank(CheatTarget::One(gov_addr), random_user_2, CheatSpan::TargetCalls(1));
     staking.unstake_airdrop(); 
+    assert(floating.balance_of(random_user_2) == RANDOM_USER_2_AIRDROP_AMOUNT.into(), 'wrong bal floating rndusr2');
 
     prank(CheatTarget::One(gov_addr), random_user_3, CheatSpan::TargetCalls(1));
     staking.unstake_airdrop(); 
+    assert(floating.balance_of(random_user_3) == RANDOM_USER_3_AIRDROP_AMOUNT.into(), 'wrong bal floating rndusr3');
 }   
 
 #[test]
