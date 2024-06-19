@@ -10,6 +10,7 @@ use konoha::contract::IGovernanceDispatcher;
 use konoha::contract::IGovernanceDispatcherTrait;
 use konoha::proposals::IProposalsDispatcher;
 use konoha::proposals::IProposalsDispatcherTrait;
+use amm_governance::constants::UNLOCK_DATE;
 use konoha::traits::{IERC20Dispatcher, IERC20DispatcherTrait};
 use konoha::treasury::{ITreasuryDispatcher, ITreasuryDispatcherTrait};
 use konoha::upgrades::IUpgradesDispatcher;
@@ -21,9 +22,6 @@ use snforge_std::{
 };
 use starknet::{ClassHash, ContractAddress, get_block_timestamp, get_block_number};
 use super::utils::vote_on_proposal;
-
-// TODO: Remove this
-const UNLOCK_DATE: u64 = 1722470399;
 
 // commented out as it fails with 'No voting power' for now
 //#[test]
