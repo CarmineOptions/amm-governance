@@ -16,10 +16,11 @@ pub mod Governance {
     use amm_governance::proposals::proposals::InternalTrait;
     use amm_governance::staking::staking as staking_component;
     use amm_governance::upgrades::upgrades as upgrades_component;
+    use amm_governance::staking::{IStakingDispatcher, IStakingDispatcherTrait};
     use konoha::airdrop::airdrop as airdrop_component;
     use konoha::types::{BlockNumber, VoteStatus, ContractType, PropDetails, CustomProposalConfig};
 
-    use starknet::ContractAddress;
+    use starknet::{ContractAddress, get_contract_address};
 
 
     component!(path: airdrop_component, storage: airdrop, event: AirdropEvent);
@@ -85,6 +86,9 @@ pub mod Governance {
         }
     }
 
+    const ONE_MONTH: u64 = 2629743; // 30.44 days
+    const ONE_YEAR: u64 = 31536000; // 365 days
+
     #[abi(embed_v0)]
     impl Migrate of super::IMigrate<ContractState> {
         fn add_custom_proposals(ref self: ContractState) {
@@ -103,6 +107,14 @@ pub mod Governance {
             self.proposals.add_custom_proposal_config(upgrade_govtoken);
 
             self.migration_performed.write(true);
+
+            let staking = IStakingDispatcher { contract_address: get_contract_address() };
+            let THREE_MONTHS = ONE_MONTH * 3;
+            let SIX_MONTHS = ONE_MONTH * 6;
+            staking.set_curve_point(ONE_MONTH, 100); // 1 KONOHA = 1 veKONOHA if staked for 1 month
+            staking.set_curve_point(THREE_MONTHS, 120);
+            staking.set_curve_point(SIX_MONTHS, 160);
+            staking.set_curve_point(ONE_YEAR, 250);
         }
     }
 }

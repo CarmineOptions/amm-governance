@@ -1,12 +1,12 @@
 // This is the locked Cairo token.
 
 #[starknet::interface]
-pub trait IVeCARM<TContractState> {
+pub trait IVeCRM<TContractState> {
     fn initializer(ref self: TContractState);
 }
 
 #[starknet::contract]
-pub mod VeCARM {
+pub mod VeCRM {
     use konoha::traits::IERC20;
     use openzeppelin::access::ownable::OwnableComponent;
     use openzeppelin::access::ownable::interface::IOwnableTwoStep;
@@ -53,14 +53,14 @@ pub mod VeCARM {
     fn constructor(ref self: ContractState, owner: ContractAddress) {
         // will not be called.
         let name = "vote escrowed Carmine token";
-        let symbol = "veCARM";
+        let symbol = "veCRM";
 
         self.erc20.initializer(name, symbol);
         self.ownable.initializer(owner);
     }
 
     #[abi(embed_v0)]
-    impl VeCARM of super::IVeCARM<ContractState> {
+    impl VeCRM of super::IVeCRM<ContractState> {
         fn initializer(ref self: ContractState) {
             let gov_addr: ContractAddress =
                 0x001405ab78ab6ec90fba09e6116f373cda53b0ba557789a4578d8c1ec374ba0f

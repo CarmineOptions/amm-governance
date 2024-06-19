@@ -84,7 +84,7 @@ pub(crate) mod staking {
         >, // STAKE(address, ID) → Stake{amount staked, amount voting token, start date, length of stake, withdrawn}
         curve: LegacyMap::<
             u64, u16
-        >, // length of stake > CARM to veCARM conversion rate (conversion rate is expressed in % – 2:1 is 200)
+        >, // length of stake > CRM to veCRM conversion rate (conversion rate is expressed in % – 2:1 is 200)
         floating_token_address: ContractAddress
     }
 
