@@ -348,12 +348,12 @@ pub(crate) mod staking {
                 .total_supply()
                 .try_into()
                 .unwrap();
-            let total_team = self.get_total_team_voting_power();
-            let max_team_supply = total_supply / 4;
+            let total_team = self.get_total_team_voting_power(); // 7
+            let max_team_supply = (total_supply-total_team) / 2; // (8-7) / 2 = 0.5
             if (total_team < max_team_supply) {
                 return nonadjusted_voting_power;
             }
-            let adj_factor = (TWO_POW_32 * total_team) / max_team_supply;
+            let adj_factor = (TWO_POW_32 * max_team_supply) / total_team;
             (adj_factor * nonadjusted_voting_power) / TWO_POW_32
         }
     }
