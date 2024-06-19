@@ -1,7 +1,7 @@
 // This is a freely tradable ERC20 token.
 
 #[starknet::contract]
-mod CARMToken {
+mod CRMToken {
     use openzeppelin::access::ownable::OwnableComponent;
     use openzeppelin::access::ownable::interface::IOwnableTwoStep;
 
@@ -58,7 +58,7 @@ mod CARMToken {
         owner: ContractAddress
     ) {
         let name = "Carmine Token";
-        let symbol = "CARM";
+        let symbol = "CRM";
 
         self.erc20.initializer(name, symbol);
         self.erc20._mint(recipient, fixed_supply);

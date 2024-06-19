@@ -3,9 +3,9 @@ use amm_governance::contract::{
     ICarmineGovernanceDispatcherTrait
 };
 use amm_governance::staking::{IStakingDispatcher, IStakingDispatcherTrait};
-use amm_governance::vecarm::{IVeCARMDispatcher, IVeCARMDispatcherTrait};
+use amm_governance::vecarm::{IVeCRMDispatcher, IVeCRMDispatcherTrait};
 use core::num::traits::Zero;
-use konoha::constants::UNLOCK_DATE;
+use amm_governance::constants::UNLOCK_DATE;
 use konoha::contract::IGovernanceDispatcher;
 use konoha::contract::IGovernanceDispatcherTrait;
 use konoha::proposals::IProposalsDispatcher;
@@ -35,11 +35,11 @@ fn test_upgrade_to_master() {
     // declare current and submit proposal
     let gov_class: ContractClass = declare("Governance").expect('unable to declare!');
     assert(Zero::is_non_zero(@gov_class.class_hash), 'new classhash zero??');
-    let scaling_address: ContractAddress =
+    let user2_address: ContractAddress =
         0x052df7acdfd3174241fa6bd5e1b7192cd133f8fc30a2a6ed99b0ddbfb5b22dcd
         .try_into()
         .unwrap();
-    start_prank(CheatTarget::One(gov_contract_addr), scaling_address);
+    start_prank(CheatTarget::One(gov_contract_addr), user2_address);
     let new_prop_id = dispatcher.submit_proposal(gov_class.class_hash.into(), 1);
     println!("Prop submitted: {:?}", new_prop_id);
     vote_on_proposal(gov_contract_addr, new_prop_id.try_into().unwrap());
@@ -150,31 +150,31 @@ fn scenario_airdrop_staked_carm() {
         .unwrap();
 
     let gov_class: ContractClass = declare("Governance").expect('unable to declare gov');
-    let floating_class: ContractClass = declare("CARMToken").expect('unable to declare CARM');
-    let voting_class: ContractClass = declare("VeCARM").expect('unable to declare voting');
+    let floating_class: ContractClass = declare("CRMToken").expect('unable to declare CRM');
+    let voting_class: ContractClass = declare("VeCRM").expect('unable to declare voting');
 
     let mut floating_calldata = ArrayTrait::new();
     floating_calldata.append(10000000000000000000000000); // fixed supply low
     floating_calldata.append(0); // fixed supply high
     floating_calldata.append(gov_addr.into());
     floating_calldata.append(gov_addr.into());
-    let (floating_addr, _) = floating_class.deploy(@floating_calldata).unwrap();
+    let (floating_addr, _) = floating_class.deploy_at(@floating_calldata, 0x71cc3fbda6eb62d60c57c84eb995338fcb74a31dfb58e64f88185d1ac8ae8b8.try_into().unwrap()).unwrap();
     println!("Floating addr: {:?}", floating_addr);
     let time_zero = get_block_timestamp();
 
-    let marek: ContractAddress = 0x0011d341c6e841426448ff39aa443a6dbb428914e05ba2259463c18308b86233
+    let user1: ContractAddress = 0x0011d341c6e841426448ff39aa443a6dbb428914e05ba2259463c18308b86233
         .try_into()
         .unwrap();
-    let scaling: ContractAddress =
+    let user2: ContractAddress =
         0x052df7acdfd3174241fa6bd5e1b7192cd133f8fc30a2a6ed99b0ddbfb5b22dcd
         .try_into()
         .unwrap();
-    let ondrej: ContractAddress = 0x0583a9d956d65628f806386ab5b12dccd74236a3c6b930ded9cf3c54efc722a1
+    let user3: ContractAddress = 0x0583a9d956d65628f806386ab5b12dccd74236a3c6b930ded9cf3c54efc722a1
         .try_into()
         .unwrap();
 
     let props = IProposalsDispatcher { contract_address: gov_addr };
-    prank(CheatTarget::One(gov_addr), marek, CheatSpan::TargetCalls(6));
+    prank(CheatTarget::One(gov_addr), user1, CheatSpan::TargetCalls(6));
     let prop_id_gov_upgrade = props.submit_proposal(gov_class.class_hash.into(), 1);
     let prop_id_vecarm_upgrade = props.submit_proposal(voting_class.class_hash.into(), 2);
     props.vote(prop_id_gov_upgrade, 1);
@@ -184,7 +184,7 @@ fn scenario_airdrop_staked_carm() {
             voting_class.class_hash.into(), 3
         ); // simulate airdrop proposal, no merkle tree root yet
     props.vote(prop_id_airdrop, 1);
-    prank(CheatTarget::One(gov_addr), scaling, CheatSpan::TargetCalls(3));
+    prank(CheatTarget::One(gov_addr), user2, CheatSpan::TargetCalls(3));
     props.vote(prop_id_gov_upgrade, 1);
     props.vote(prop_id_airdrop, 1);
     props.vote(prop_id_vecarm_upgrade, 1);
@@ -198,7 +198,9 @@ fn scenario_airdrop_staked_carm() {
     // can't apply passed proposal to upgrade vecarm because that would have to be a custom proposal under new governance
     upgrades.apply_passed_proposal(prop_id_gov_upgrade);
 
-    let vecarm = IVeCARMDispatcher { contract_address: vecarm_addr };
+    let amm_governance = IMigrateDispatcher { contract_address: gov_addr };
+    amm_governance.add_custom_proposals();
+    let vecarm = IVeCRMDispatcher { contract_address: vecarm_addr };
     vecarm.initializer();
     let voting = IERC20Dispatcher { contract_address: vecarm_addr };
 
@@ -206,10 +208,21 @@ fn scenario_airdrop_staked_carm() {
     let staking = IStakingDispatcher { contract_address: gov_addr };
     println!("initializing floating token address");
     staking.initialize_floating_token_address();
-    prank(CheatTarget::One(gov_addr), scaling, CheatSpan::TargetCalls(1));
+    prank(CheatTarget::One(gov_addr), user2, CheatSpan::TargetCalls(1));
     println!("unstaking..");
-    let bal_before_unstake = voting.balance_of(scaling);
+    let bal_before_unstake = voting.balance_of(user2);
     staking.unstake_airdrop();
     let floating = IERC20Dispatcher { contract_address: floating_addr };
-    assert(floating.balance_of(scaling) == bal_before_unstake, 'wrong bal floating scaling');
+    assert(floating.balance_of(user2) == bal_before_unstake, 'wrong bal floating user2');
+
+    let bal_before_unstake_user3 = voting.balance_of(user3);
+    prank(CheatTarget::One(gov_addr), user3, CheatSpan::TargetCalls(1));
+    staking.unstake_airdrop();
+    assert(floating.balance_of(user3) == bal_before_unstake_user3, 'wrong bal floating user3');
+    assert(floating.balance_of(gov_addr) > 0, 'gov has no floatingtokens?');
+    println!("staking..");
+    prank(CheatTarget::One(floating_addr), user3, CheatSpan::TargetCalls(1));
+    floating.approve(gov_addr, bal_before_unstake_user3);
+    prank(CheatTarget::One(gov_addr), user3, CheatSpan::TargetCalls(1));
+    staking.stake(31536000, bal_before_unstake_user3.try_into().unwrap());
 }

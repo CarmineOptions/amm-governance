@@ -1,5 +1,5 @@
 pub mod carm;
-mod constants;
+pub mod constants;
 pub mod contract;
 mod options;
 mod proposals;

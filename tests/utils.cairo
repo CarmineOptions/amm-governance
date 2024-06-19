@@ -15,21 +15,21 @@ use starknet::{ClassHash, ContractAddress, get_block_timestamp};
 pub(crate) fn vote_on_proposal(gov_contract_addr: ContractAddress, prop_id: u32) {
     let dispatcher = IProposalsDispatcher { contract_address: gov_contract_addr };
     let mut top_carm_holders = ArrayTrait::new();
-    let marek_address: ContractAddress =
+    let user1_address: ContractAddress =
         0x0011d341c6e841426448ff39aa443a6dbb428914e05ba2259463c18308b86233
         .try_into()
         .unwrap();
-    top_carm_holders.append(marek_address);
-    let scaling_address: ContractAddress =
+    top_carm_holders.append(user1_address);
+    let user2_address: ContractAddress =
         0x052df7acdfd3174241fa6bd5e1b7192cd133f8fc30a2a6ed99b0ddbfb5b22dcd
         .try_into()
         .unwrap();
-    top_carm_holders.append(scaling_address);
-    let ondrej_address: ContractAddress =
+    top_carm_holders.append(user2_address);
+    let user3_address: ContractAddress =
         0x0583a9d956d65628f806386ab5b12dccd74236a3c6b930ded9cf3c54efc722a1
         .try_into()
         .unwrap();
-    top_carm_holders.append(ondrej_address);
+    top_carm_holders.append(user3_address);
     let carlote_address: ContractAddress =
         0x021b2b25dd73bc60b0549683653081f8963562cbe5cba2d123ec0cbcbf0913e4
         .try_into()

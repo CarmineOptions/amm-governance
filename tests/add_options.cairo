@@ -20,12 +20,12 @@ use starknet::{ContractAddress, get_block_timestamp};
 //         .try_into()
 //         .unwrap();
 //     let dispatcher = IGovernanceDispatcher { contract_address: gov_contract_addr };
-//     let marek_address: ContractAddress =
+//     let user1_address: ContractAddress =
 //         0x0011d341c6e841426448ff39aa443a6dbb428914e05ba2259463c18308b86233
 //         .try_into()
 //         .unwrap();
 //     let new_contract: ContractClass = declare('Governance');
-//     start_prank(CheatTarget::One(gov_contract_addr), marek_address);
+//     start_prank(CheatTarget::One(gov_contract_addr), user1_address);
 //     let ret = dispatcher.submit_proposal(new_contract.class_hash.into(), 1);
 //     dispatcher.vote(ret, 1);
 //     let curr_timestamp = get_block_timestamp();
@@ -37,7 +37,7 @@ use starknet::{ContractAddress, get_block_timestamp};
 //     let amm_addr = 0x076dbabc4293db346b0a56b29b6ea9fe18e93742c73f12348c8747ecfc1050aa
 //         .try_into()
 //         .unwrap();
-//     trade_option(1704412799, marek_address, amm_addr, FixedTrait::from_unscaled_felt(2200));
+//     trade_option(1704412799, user1_address, amm_addr, FixedTrait::from_unscaled_felt(2200));
 // }
 
 // buys 0.01 long eth/usdc call
