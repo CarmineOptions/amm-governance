@@ -11,7 +11,6 @@ use konoha::contract::IGovernanceDispatcher;
 use konoha::contract::IGovernanceDispatcherTrait;
 use konoha::proposals::IProposalsDispatcher;
 use konoha::proposals::IProposalsDispatcherTrait;
-use amm_governance::constants::UNLOCK_DATE;
 use konoha::traits::{IERC20Dispatcher, IERC20DispatcherTrait};
 use konoha::treasury::{ITreasuryDispatcher, ITreasuryDispatcherTrait};
 use konoha::upgrades::IUpgradesDispatcher;

@@ -13,7 +13,7 @@ use konoha::upgrades::IUpgradesDispatcher;
 use konoha::upgrades::IUpgradesDispatcherTrait;
 use konoha::airdrop::{IAirdropDispatcher, IAirdropDispatcherTrait};
 use amm_governance::staking::{IStakingDispatcher, IStakingDispatcherTrait};
-use amm_governance::vecarm::{IVeCARMDispatcher, IVeCARMDispatcherTrait};
+use amm_governance::vecarm::{IVeCRMDispatcher, IVeCRMDispatcherTrait};
 use amm_governance::constants::UNLOCK_DATE;
 use konoha::traits::{IERC20Dispatcher, IERC20DispatcherTrait};
 use openzeppelin::upgrades::interface::{IUpgradeableDispatcher, IUpgradeableDispatcherTrait};
@@ -44,16 +44,16 @@ fn test_unstake_airdrop() {
         .unwrap();
 
     let gov_class: ContractClass = declare("Governance").expect('unable to declare gov');
-    let floating_class: ContractClass = declare("CARMToken").expect('unable to declare CARM');
-    let voting_class: ContractClass = declare("VeCARM").expect('unable to declare voting');
+    let floating_class: ContractClass = declare("CRMToken").expect('unable to declare CRM');
+    let voting_class: ContractClass = declare("VeCRM").expect('unable to declare voting');
 
     let mut floating_calldata = ArrayTrait::new();
     floating_calldata.append(10000000000000000000000000); // fixed supply low
     floating_calldata.append(0); // fixed supply high
     floating_calldata.append(gov_addr.into());
     floating_calldata.append(gov_addr.into());
-    let (floating_addr, _) = floating_class.deploy(@floating_calldata).unwrap();
-    println!("Floating addr: {:?}", floating_addr);
+    let (floating_addr, _) = floating_class.deploy_at(@floating_calldata, 0x71cc3fbda6eb62d60c57c84eb995338fcb74a31dfb58e64f88185d1ac8ae8b8.try_into().unwrap()).unwrap();
+    
     let time_zero = get_block_timestamp();
 
     let team_member_1: ContractAddress = 0x0011d341c6e841426448ff39aa443a6dbb428914e05ba2259463c18308b86233.try_into().unwrap();
@@ -98,7 +98,7 @@ fn test_unstake_airdrop() {
     upgrades.apply_passed_proposal(prop_id_gov_upgrade);
 
     // Initialize veCarm token with governance as the owner
-    let vecarm = IVeCARMDispatcher { contract_address: vecarm_addr };
+    let vecarm = IVeCRMDispatcher { contract_address: vecarm_addr };
     vecarm.initializer();
 
     check_if_healthy(gov_addr);
@@ -161,16 +161,16 @@ fn test_unstake_airdrop_unstake_again_failing() {
         .unwrap();
 
     let gov_class: ContractClass = declare("Governance").expect('unable to declare gov');
-    let floating_class: ContractClass = declare("CARMToken").expect('unable to declare CARM');
-    let voting_class: ContractClass = declare("VeCARM").expect('unable to declare voting');
+    let floating_class: ContractClass = declare("CRMToken").expect('unable to declare CRM');
+    let voting_class: ContractClass = declare("VeCRM").expect('unable to declare voting');
 
     let mut floating_calldata = ArrayTrait::new();
     floating_calldata.append(10000000000000000000000000); // fixed supply low
     floating_calldata.append(0); // fixed supply high
     floating_calldata.append(gov_addr.into());
     floating_calldata.append(gov_addr.into());
-    let (floating_addr, _) = floating_class.deploy(@floating_calldata).unwrap();
-    println!("Floating addr: {:?}", floating_addr);
+    let (floating_addr, _) = floating_class.deploy_at(@floating_calldata, 0x71cc3fbda6eb62d60c57c84eb995338fcb74a31dfb58e64f88185d1ac8ae8b8.try_into().unwrap()).unwrap();
+    
     let time_zero = get_block_timestamp();
 
     let team_member_1: ContractAddress = 0x0011d341c6e841426448ff39aa443a6dbb428914e05ba2259463c18308b86233.try_into().unwrap(); // Team
@@ -212,7 +212,7 @@ fn test_unstake_airdrop_unstake_again_failing() {
     upgrades.apply_passed_proposal(prop_id_gov_upgrade);
 
     // Initialize veCarm token with governance as the owner
-    let vecarm = IVeCARMDispatcher { contract_address: vecarm_addr };
+    let vecarm = IVeCRMDispatcher { contract_address: vecarm_addr };
     vecarm.initializer();
 
     check_if_healthy(gov_addr);
@@ -248,16 +248,16 @@ fn test_unstake_airdrop_team_member_failing() {
         .unwrap();
 
     let gov_class: ContractClass = declare("Governance").expect('unable to declare gov');
-    let floating_class: ContractClass = declare("CARMToken").expect('unable to declare CARM');
-    let voting_class: ContractClass = declare("VeCARM").expect('unable to declare voting');
+    let floating_class: ContractClass = declare("CRMToken").expect('unable to declare CRM');
+    let voting_class: ContractClass = declare("VeCRM").expect('unable to declare voting');
 
     let mut floating_calldata = ArrayTrait::new();
     floating_calldata.append(10000000000000000000000000); // fixed supply low
     floating_calldata.append(0); // fixed supply high
     floating_calldata.append(gov_addr.into());
     floating_calldata.append(gov_addr.into());
-    let (floating_addr, _) = floating_class.deploy(@floating_calldata).unwrap();
-    println!("Floating addr: {:?}", floating_addr);
+    let (floating_addr, _) = floating_class.deploy_at(@floating_calldata, 0x71cc3fbda6eb62d60c57c84eb995338fcb74a31dfb58e64f88185d1ac8ae8b8.try_into().unwrap()).unwrap();
+    
     let time_zero = get_block_timestamp();
 
     let team_member_1: ContractAddress = 0x0011d341c6e841426448ff39aa443a6dbb428914e05ba2259463c18308b86233.try_into().unwrap(); // Team
@@ -299,7 +299,7 @@ fn test_unstake_airdrop_team_member_failing() {
     upgrades.apply_passed_proposal(prop_id_gov_upgrade);
 
     // Initialize veCarm token with governance as the owner
-    let vecarm = IVeCARMDispatcher { contract_address: vecarm_addr };
+    let vecarm = IVeCRMDispatcher { contract_address: vecarm_addr };
     vecarm.initializer();
 
     check_if_healthy(gov_addr);
