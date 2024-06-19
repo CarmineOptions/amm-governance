@@ -1,3 +1,4 @@
+use amm_governance::constants::UNLOCK_DATE;
 use amm_governance::contract::{
     IMigrateDispatcher, IMigrateDispatcherTrait, ICarmineGovernanceDispatcher,
     ICarmineGovernanceDispatcherTrait
@@ -5,7 +6,6 @@ use amm_governance::contract::{
 use amm_governance::staking::{IStakingDispatcher, IStakingDispatcherTrait};
 use amm_governance::vecarm::{IVeCRMDispatcher, IVeCRMDispatcherTrait};
 use core::num::traits::Zero;
-use amm_governance::constants::UNLOCK_DATE;
 
 use konoha::contract::IGovernanceDispatcher;
 use konoha::contract::IGovernanceDispatcherTrait;
@@ -159,15 +159,19 @@ fn scenario_airdrop_staked_carm() {
     floating_calldata.append(0); // fixed supply high
     floating_calldata.append(gov_addr.into());
     floating_calldata.append(gov_addr.into());
-    let (floating_addr, _) = floating_class.deploy_at(@floating_calldata, 0x71cc3fbda6eb62d60c57c84eb995338fcb74a31dfb58e64f88185d1ac8ae8b8.try_into().unwrap()).unwrap();
+    let (floating_addr, _) = floating_class
+        .deploy_at(
+            @floating_calldata,
+            0x71cc3fbda6eb62d60c57c84eb995338fcb74a31dfb58e64f88185d1ac8ae8b8.try_into().unwrap()
+        )
+        .unwrap();
     println!("Floating addr: {:?}", floating_addr);
     let time_zero = get_block_timestamp();
 
     let user1: ContractAddress = 0x0011d341c6e841426448ff39aa443a6dbb428914e05ba2259463c18308b86233
         .try_into()
         .unwrap();
-    let user2: ContractAddress =
-        0x052df7acdfd3174241fa6bd5e1b7192cd133f8fc30a2a6ed99b0ddbfb5b22dcd
+    let user2: ContractAddress = 0x052df7acdfd3174241fa6bd5e1b7192cd133f8fc30a2a6ed99b0ddbfb5b22dcd
         .try_into()
         .unwrap();
     let user3: ContractAddress = 0x0583a9d956d65628f806386ab5b12dccd74236a3c6b930ded9cf3c54efc722a1
