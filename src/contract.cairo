@@ -20,6 +20,8 @@ pub mod Governance {
     use konoha::airdrop::airdrop as airdrop_component;
     use konoha::types::{BlockNumber, VoteStatus, ContractType, PropDetails, CustomProposalConfig};
 
+    use starknet::syscalls::deploy_syscall;
+
     use starknet::{ContractAddress, get_contract_address, ClassHash};
 
 
@@ -66,14 +68,13 @@ pub mod Governance {
         StakingEvent: staking_component::Event,
     }
 
-    use starknet::syscalls::deploy_syscall;
-
     #[constructor]
-    fn constructor(ref self: ContractState,
+    fn constructor(
+        ref self: ContractState,
         voting_token_class: ClassHash,
         floating_token_class: ClassHash,
-        recipient: ContractAddress) {
-        // This is not used in production on mainnet, because the governance token is already deployed (and distributed).
+        recipient: ContractAddress
+    ) {// This is not used in production on mainnet, because the governance token is already deployed (and distributed).
     }
 
     #[abi(embed_v0)]
