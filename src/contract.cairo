@@ -74,37 +74,6 @@ pub mod Governance {
         floating_token_class: ClassHash,
         recipient: ContractAddress) {
         // This is not used in production on mainnet, because the governance token is already deployed (and distributed).
-
-        let governance_address = get_contract_address();
-
-        let mut voting_token_calldata: Array<felt252> = ArrayTrait::new();
-        voting_token_calldata.append(governance_address.into());
-        let (voting_token_address, _) = deploy_syscall(
-            voting_token_class, 42, voting_token_calldata.span(), true
-        )
-            .unwrap();
-        self.governance_token_address.write(voting_token_address);
-
-        let mut floating_token_calldata: Array<felt252> = ArrayTrait::new();
-        floating_token_calldata.append(10000000000000000000); // 10**19, 10 tokens overall
-        floating_token_calldata.append(0); // high for u256 supply
-        floating_token_calldata.append(recipient.into());
-        floating_token_calldata.append(governance_address.into());
-        let (floating_token_address, _) = deploy_syscall(
-            floating_token_class, 42, floating_token_calldata.span(), true
-        )
-            .unwrap();
-
-        let staking = IStakingDispatcher { contract_address: governance_address };
-        staking.set_floating_token_address(floating_token_address);
-        let ONE_MONTH: u64 = 2629743; // 30.44 days
-        let THREE_MONTHS = ONE_MONTH * 3;
-        let SIX_MONTHS = ONE_MONTH * 6;
-        let ONE_YEAR: u64 = 31536000; // 365 days
-        staking.set_curve_point(ONE_MONTH, 100);
-        staking.set_curve_point(THREE_MONTHS, 120);
-        staking.set_curve_point(SIX_MONTHS, 160);
-        staking.set_curve_point(ONE_YEAR, 250);
     }
 
     #[abi(embed_v0)]
@@ -132,7 +101,7 @@ pub mod Governance {
                 target: self.amm_address.read().into(),
                 selector: selector!("upgrade"),
                 library_call: false
-            }; // TODO test
+            };
             let upgrade_govtoken = CustomProposalConfig {
                 target: self.governance_token_address.read().into(),
                 selector: selector!("upgrade"),

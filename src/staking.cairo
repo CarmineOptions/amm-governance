@@ -143,6 +143,7 @@ pub(crate) mod staking {
             0x00777558f1c767126461540d1f10118981d30bd620707e99686bfc9f00ae66f0,
             0x06e2c2a5da2e5478b1103d452486afba8378e91f32a124f0712f09edd3ccd923,
             0x035e0845154423c485e5216f70496130079b5ddc8ac66e3e316184482788e2a0,
+            0x0244dda2c6581eb158db225992153c9d49e92c412424daeb83a773fa9822eeef, // team multisig
         ];
         @arr.span()
     }
@@ -150,8 +151,8 @@ pub(crate) mod staking {
     #[inline(always)]
     fn get_investor_addresses() -> @Span<felt252> {
         let arr = array![
-            0x05a4523982b437aadd1b5109b6618c46f7b1c42f5f9e7de1a3b84091f87d411b
-            // TODO add multisig
+            0x05a4523982b437aadd1b5109b6618c46f7b1c42f5f9e7de1a3b84091f87d411b,
+            0x056d761e1e5d1918dba05de02afdbd8de8da01a63147dce828c9b1fe9227077d, // investor multisig
         ];
         @arr.span()
     }
