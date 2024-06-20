@@ -334,9 +334,9 @@ pub(crate) mod staking {
             let curr = self.floating_token_address.read();
             assert(curr.into() == 0, 'floating token already init');
             let default_address: ContractAddress =
-                0x71cc3fbda6eb62d60c57c84eb995338fcb74a31dfb58e64f88185d1ac8ae8b8
+                0x051c4b1fe3bf6774b87ad0b15ef5d1472759076e42944fff9b9f641ff13e5bbe
                 .try_into()
-                .unwrap(); // TODO fix
+                .unwrap();
             self.floating_token_address.write(default_address);
         }
 
@@ -385,8 +385,12 @@ pub(crate) mod staking {
                 .unwrap();
             let total_team = self.get_total_group_voting_power(false);
             let total_investor = self.get_total_group_voting_power(true);
-            let max_group_supply = ((total_supply-total_team)-total_investor) / 2;
-            let total_group = if is_investor { total_investor } else { total_team };
+            let max_group_supply = ((total_supply - total_team) - total_investor) / 2;
+            let total_group = if is_investor {
+                total_investor
+            } else {
+                total_team
+            };
             if (total_group < max_group_supply) {
                 return nonadjusted_voting_power;
             }
@@ -433,9 +437,15 @@ pub(crate) mod staking {
             }
         }
 
-        fn get_total_group_voting_power(self: @ComponentState<TContractState>, investors: bool) -> u128 {
+        fn get_total_group_voting_power(
+            self: @ComponentState<TContractState>, investors: bool
+        ) -> u128 {
             let mut total: u128 = 0;
-            let mut addresses = if investors {*get_investor_addresses()} else {*get_team_addresses()};
+            let mut addresses = if investors {
+                *get_investor_addresses()
+            } else {
+                *get_team_addresses()
+            };
             loop {
                 match addresses.pop_front() {
                     Option::Some(addr) => {
