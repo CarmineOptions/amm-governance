@@ -371,9 +371,9 @@ pub(crate) mod staking {
             self: @ComponentState<TContractState>, address: ContractAddress
         ) -> u128 {
             let nonadjusted_voting_power = self.get_total_voting_power(address);
-            let investor = is_investor(address);
-            let team = is_team(address);
-            if (!investor && !team) {
+            let is_investor = is_investor(address);
+            let is_team = is_team(address);
+            if (!is_investor && !is_team) {
                 return nonadjusted_voting_power;
             }
             let total_supply: u128 = IERC20Dispatcher {
@@ -385,7 +385,7 @@ pub(crate) mod staking {
             let total_team = self.get_total_group_voting_power(false);
             let total_investor = self.get_total_group_voting_power(true);
             let max_group_supply = ((total_supply-total_team)-total_investor) / 2;
-            let total_group = if investor { total_investor } else { total_team };
+            let total_group = if is_investor { total_investor } else { total_team };
             if (total_group < max_group_supply) {
                 return nonadjusted_voting_power;
             }
