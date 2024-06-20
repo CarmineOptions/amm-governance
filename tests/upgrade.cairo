@@ -150,20 +150,18 @@ fn scenario_airdrop_staked_carm() {
         .try_into()
         .unwrap();
 
-    let gov_class: ContractClass = declare("Governance").expect('unable to declare gov');
-    let floating_class: ContractClass = declare("CRMToken").expect('unable to declare CRM');
-    let voting_class: ContractClass = declare("VeCRM").expect('unable to declare voting');
+    //let gov_class: ContractClass = declare("Governance").expect('unable to declare gov');
+    //let floating_class: ContractClass = declare("CRMToken").expect('unable to declare CRM');
+    //let voting_class: ContractClass = declare("VeCRM").expect('unable to declare voting');
 
     let mut floating_calldata = ArrayTrait::new();
     floating_calldata.append(10000000000000000000000000); // fixed supply low
     floating_calldata.append(0); // fixed supply high
     floating_calldata.append(gov_addr.into());
     floating_calldata.append(gov_addr.into());
-    let (floating_addr, _) = floating_class
-        .deploy_at(
-            @floating_calldata,
-            0x71cc3fbda6eb62d60c57c84eb995338fcb74a31dfb58e64f88185d1ac8ae8b8.try_into().unwrap()
-        )
+    let floating_addr: ContractAddress =
+        0x051c4b1fe3bf6774b87ad0b15ef5d1472759076e42944fff9b9f641ff13e5bbe
+        .try_into()
         .unwrap();
     println!("Floating addr: {:?}", floating_addr);
     let time_zero = get_block_timestamp();
@@ -187,13 +185,13 @@ fn scenario_airdrop_staked_carm() {
 
     let props = IProposalsDispatcher { contract_address: gov_addr };
     prank(CheatTarget::One(gov_addr), user1, CheatSpan::TargetCalls(6));
-    let prop_id_gov_upgrade = props.submit_proposal(gov_class.class_hash.into(), 1);
-    let prop_id_vecarm_upgrade = props.submit_proposal(voting_class.class_hash.into(), 2);
+    let prop_id_gov_upgrade = props.submit_proposal(0x04bc8bc7c476c4fca95624809dab1f1aa718edb566184a9d6dfe54f65b32b507, 1);
+    let prop_id_vecarm_upgrade = props.submit_proposal(0x008e98fd1f76f0d6fca8b03292e1dd6c8a6c5362f5aa0fd1186592168e9ad692, 2);
     props.vote(prop_id_gov_upgrade, 1);
     props.vote(prop_id_vecarm_upgrade, 1);
     let prop_id_airdrop = props
         .submit_proposal(
-            voting_class.class_hash.into(), 3
+            0x1337, 3
         ); // simulate airdrop proposal, no merkle tree root yet
     props.vote(prop_id_airdrop, 1);
     prank(CheatTarget::One(gov_addr), user2, CheatSpan::TargetCalls(3));

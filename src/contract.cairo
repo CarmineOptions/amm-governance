@@ -74,7 +74,7 @@ pub mod Governance {
         voting_token_class: ClassHash,
         floating_token_class: ClassHash,
         recipient: ContractAddress
-    ) {// This is not used in production on mainnet, because the governance token is already deployed (and distributed).
+    ) { // This is not used in production on mainnet, because the governance token is already deployed (and distributed).
     }
 
     #[abi(embed_v0)]
