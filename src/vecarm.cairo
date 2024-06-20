@@ -7,7 +7,7 @@ pub trait IVeCRM<TContractState> {
 
 #[starknet::contract]
 pub mod VeCRM {
-    use konoha::traits::IERC20;
+    use amm_governance::traits::IERC20;
     use openzeppelin::access::ownable::OwnableComponent;
     use openzeppelin::access::ownable::interface::IOwnableTwoStep;
     use openzeppelin::access::ownable::ownable::OwnableComponent::InternalTrait as OwnableInternalTrait;
@@ -73,12 +73,12 @@ pub mod VeCRM {
     #[abi(embed_v0)]
     impl VotingToken of IERC20<ContractState> {
         // READ
-        fn name(self: @ContractState) -> ByteArray {
-            ERC20MetadataImpl::name(self)
+        fn name(self: @ContractState) -> felt252 {
+            'vote escrowed Carmine token'
         }
 
-        fn symbol(self: @ContractState) -> ByteArray {
-            ERC20MetadataImpl::symbol(self)
+        fn symbol(self: @ContractState) -> felt252 {
+            'veCRM'
         }
 
         fn decimals(self: @ContractState) -> u8 {
