@@ -62,6 +62,7 @@ mod CRMToken {
 
         self.erc20.initializer(name, symbol);
         self.erc20._mint(recipient, fixed_supply);
+        self.ownable.initializer(owner);
     }
 
     #[abi(embed_v0)]
