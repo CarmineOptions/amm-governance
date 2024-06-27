@@ -416,7 +416,7 @@ pub(crate) mod proposals {
             let current_timestamp: u64 = get_block_timestamp();
 
             if current_timestamp <= end_timestamp {
-                return self.check_proposal_passed_express(prop_id).into();
+                return 0;
             }
 
             let gov_token_addr = get_governance_token_address_self();
