@@ -144,6 +144,7 @@ pub(crate) mod staking {
             0x06e2c2a5da2e5478b1103d452486afba8378e91f32a124f0712f09edd3ccd923,
             0x035e0845154423c485e5216f70496130079b5ddc8ac66e3e316184482788e2a0,
             0x0244dda2c6581eb158db225992153c9d49e92c412424daeb83a773fa9822eeef, // team multisig
+            0x059c0d4c5dde72e8cab06105be5f2beeb4de52dc516ccbafcaa0b58894d16397, // company wallet
         ];
         @arr.span()
     }
