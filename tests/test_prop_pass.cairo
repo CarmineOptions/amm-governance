@@ -1,6 +1,8 @@
+use amm_governance::proposals::{IProposalsDispatcherTrait, IProposalsDispatcher};
 use amm_governance::staking::{IStakingDispatcherTrait, IStakingDispatcher};
 use openzeppelin::token::erc20::interface::{IERC20DispatcherTrait, IERC20Dispatcher};
-use amm_governance::proposals::{IProposalsDispatcherTrait, IProposalsDispatcher};
+
+use snforge_std::{CheatSpan, CheatTarget, prank};
 use starknet::ContractAddress;
 
 const DECS: u128 = 1000000000000000000; // 10*18
@@ -39,9 +41,7 @@ fn get_investor_addresses() -> @Span<felt252> {
     @arr.span()
 }
 
-fn get_adjusted_group_voting_power(
-    contract: IStakingDispatcher, investors: bool
-) -> u128 {
+fn get_adjusted_group_voting_power(contract: IStakingDispatcher, investors: bool) -> u128 {
     let mut total: u128 = 0;
     let mut addresses = *get_team_addresses();
     loop {
@@ -55,9 +55,7 @@ fn get_adjusted_group_voting_power(
 }
 
 
-fn get_total_group_voting_power(
-    contract: IStakingDispatcher, investors: bool
-) -> u128 {
+fn get_total_group_voting_power(contract: IStakingDispatcher, investors: bool) -> u128 {
     let mut total: u128 = 0;
     let mut addresses = if investors {
         *get_investor_addresses()
@@ -74,13 +72,15 @@ fn get_total_group_voting_power(
     }
 }
 
-fn get_total_voted_adjusted(proposals: IProposalsDispatcher, staking: IStakingDispatcher, prop_id: u32) -> u128 {
+fn get_total_voted_adjusted(
+    proposals: IProposalsDispatcher, staking: IStakingDispatcher, prop_id: u32
+) -> u128 {
     let mut addresses = *get_team_addresses();
     let mut total = 0;
     loop {
         match addresses.pop_front() {
             Option::Some(addr) => {
-                if(proposals.get_user_voted((*addr).try_into().unwrap(), prop_id.into()) != 0) {
+                if (proposals.get_user_voted((*addr).try_into().unwrap(), prop_id.into()) != 0) {
                     total += staking.get_adjusted_voting_power((*addr).try_into().unwrap());
                 }
             },
@@ -91,57 +91,77 @@ fn get_total_voted_adjusted(proposals: IProposalsDispatcher, staking: IStakingDi
 
 #[test]
 #[fork("MAINNET")]
-fn test_prop_pass(){
-    let staking = IStakingDispatcher { contract_address: 0x001405ab78ab6ec90fba09e6116f373cda53b0ba557789a4578d8c1ec374ba0f.try_into().unwrap()};
+fn test_prop_pass() {
+    let staking = IStakingDispatcher {
+        contract_address: 0x001405ab78ab6ec90fba09e6116f373cda53b0ba557789a4578d8c1ec374ba0f
+            .try_into()
+            .unwrap()
+    };
     let total_team_adj = get_adjusted_group_voting_power(staking, false);
-    println!("total team adjusted: {:?}", total_team_adj/DECS);
+    println!("total team adjusted: {:?}", total_team_adj / DECS);
     let total_team_total = get_total_group_voting_power(staking, false);
-    println!("total team total: {:?}", total_team_total/DECS);
+    println!("total team total: {:?}", total_team_total / DECS);
     let investors_total = get_total_group_voting_power(staking, true);
     println!("investors total: {:?}", investors_total);
-    let vecrm = IERC20Dispatcher { contract_address: 0x3c0286e9e428a130ae7fbbe911b794e8a829c367dd788e7cfe3efb0367548fa.try_into().unwrap()};
-    println!("vecrm total supply: {:?}", vecrm.total_supply()/DECS.into());
-    let props = IProposalsDispatcher { contract_address: 0x001405ab78ab6ec90fba09e6116f373cda53b0ba557789a4578d8c1ec374ba0f.try_into().unwrap()};
+    let vecrm = IERC20Dispatcher {
+        contract_address: 0x3c0286e9e428a130ae7fbbe911b794e8a829c367dd788e7cfe3efb0367548fa
+            .try_into()
+            .unwrap()
+    };
+    println!("vecrm total supply: {:?}", vecrm.total_supply() / DECS.into());
+    let props = IProposalsDispatcher {
+        contract_address: 0x001405ab78ab6ec90fba09e6116f373cda53b0ba557789a4578d8c1ec374ba0f
+            .try_into()
+            .unwrap()
+    };
     let total_voted_on_prop_adj = get_total_voted_adjusted(props, staking, 77);
-    println!("total adjusted votes on prop: {:?}", total_voted_on_prop_adj/DECS);
+    println!("total adjusted votes on prop: {:?}", total_voted_on_prop_adj / DECS);
     let (yay, _nay) = props.get_vote_counts(77);
-    println!("recorded vote count: {:?}", yay/DECS);
+    println!("recorded vote count: {:?}", yay / DECS);
 }
-
-use snforge_std::{CheatSpan, CheatTarget, prank};
 
 #[test]
 #[fork("MAINNET")]
-fn test_can_pass_next_prop(){
+fn test_can_pass_next_prop() {
     let user1: ContractAddress =
-    0x0011d341c6e841426448ff39aa443a6dbb428914e05ba2259463c18308b86233 // team m 1
-    .try_into()
-    .unwrap();
-    let gov_addr = 0x001405ab78ab6ec90fba09e6116f373cda53b0ba557789a4578d8c1ec374ba0f.try_into().unwrap();
-    let props = IProposalsDispatcher { contract_address: gov_addr};
-    let staking = IStakingDispatcher { contract_address: gov_addr};
+        0x0011d341c6e841426448ff39aa443a6dbb428914e05ba2259463c18308b86233 // team m 1
+        .try_into()
+        .unwrap();
+    let gov_addr = 0x001405ab78ab6ec90fba09e6116f373cda53b0ba557789a4578d8c1ec374ba0f
+        .try_into()
+        .unwrap();
+    let props = IProposalsDispatcher { contract_address: gov_addr };
+    let staking = IStakingDispatcher { contract_address: gov_addr };
     prank(CheatTarget::One(gov_addr), user1, CheatSpan::TargetCalls(1));
     let prop_id = props.submit_proposal(0x42, 0x4);
     prank(CheatTarget::One(gov_addr), user1, CheatSpan::TargetCalls(1));
     props.vote(prop_id, 1);
 
-    let user2: ContractAddress = 0x0583a9d956d65628f806386ab5b12dccd74236a3c6b930ded9cf3c54efc722a1.try_into().unwrap(); // team o
+    let user2: ContractAddress = 0x0583a9d956d65628f806386ab5b12dccd74236a3c6b930ded9cf3c54efc722a1
+        .try_into()
+        .unwrap(); // team o
     prank(CheatTarget::One(gov_addr), user2, CheatSpan::TargetCalls(1));
     props.vote(prop_id, 1);
 
-    let user3: ContractAddress = 0x03d1525605db970fa1724693404f5f64cba8af82ec4aab514e6ebd3dec4838ad.try_into().unwrap(); //team d
+    let user3: ContractAddress = 0x03d1525605db970fa1724693404f5f64cba8af82ec4aab514e6ebd3dec4838ad
+        .try_into()
+        .unwrap(); //team d
     prank(CheatTarget::One(gov_addr), user3, CheatSpan::TargetCalls(1));
     props.vote(prop_id, 1);
 
-    let user4: ContractAddress = 0x00d79a15d84f5820310db21f953a0fae92c95e25d93cb983cc0c27fc4c52273c.try_into().unwrap(); //team m 2
+    let user4: ContractAddress = 0x00d79a15d84f5820310db21f953a0fae92c95e25d93cb983cc0c27fc4c52273c
+        .try_into()
+        .unwrap(); //team m 2
     prank(CheatTarget::One(gov_addr), user4, CheatSpan::TargetCalls(1));
     props.vote(prop_id, 1);
 
-    let user5: ContractAddress = 0x06717eaf502baac2b6b2c6ee3ac39b34a52e726a73905ed586e757158270a0af.try_into().unwrap(); //team a 1
+    let user5: ContractAddress = 0x06717eaf502baac2b6b2c6ee3ac39b34a52e726a73905ed586e757158270a0af
+        .try_into()
+        .unwrap(); //team a 1
     prank(CheatTarget::One(gov_addr), user5, CheatSpan::TargetCalls(1));
     props.vote(prop_id, 1);
 
     let (yay, _nay) = props.get_vote_counts(prop_id);
     assert(get_total_voted_adjusted(props, staking, prop_id) == yay, 'votes dont match??');
-    println!("voted on prop_id: {:?}", yay/DECS);
+    println!("voted on prop_id: {:?}", yay / DECS);
 }

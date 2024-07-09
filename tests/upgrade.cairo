@@ -185,14 +185,14 @@ fn scenario_airdrop_staked_carm() {
 
     let props = IProposalsDispatcher { contract_address: gov_addr };
     prank(CheatTarget::One(gov_addr), user1, CheatSpan::TargetCalls(6));
-    let prop_id_gov_upgrade = props.submit_proposal(0x04bc8bc7c476c4fca95624809dab1f1aa718edb566184a9d6dfe54f65b32b507, 1);
-    let prop_id_vecarm_upgrade = props.submit_proposal(0x008e98fd1f76f0d6fca8b03292e1dd6c8a6c5362f5aa0fd1186592168e9ad692, 2);
+    let prop_id_gov_upgrade = props
+        .submit_proposal(0x04bc8bc7c476c4fca95624809dab1f1aa718edb566184a9d6dfe54f65b32b507, 1);
+    let prop_id_vecarm_upgrade = props
+        .submit_proposal(0x008e98fd1f76f0d6fca8b03292e1dd6c8a6c5362f5aa0fd1186592168e9ad692, 2);
     props.vote(prop_id_gov_upgrade, 1);
     props.vote(prop_id_vecarm_upgrade, 1);
     let prop_id_airdrop = props
-        .submit_proposal(
-            0x1337, 3
-        ); // simulate airdrop proposal, no merkle tree root yet
+        .submit_proposal(0x1337, 3); // simulate airdrop proposal, no merkle tree root yet
     props.vote(prop_id_airdrop, 1);
     prank(CheatTarget::One(gov_addr), user2, CheatSpan::TargetCalls(3));
     props.vote(prop_id_gov_upgrade, 1);
