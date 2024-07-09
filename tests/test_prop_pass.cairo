@@ -112,7 +112,7 @@ use snforge_std::{CheatSpan, CheatTarget, prank};
 
 #[test]
 #[fork("MAINNET")]
-fn test_prop_eighty(){
+fn test_can_pass_next_prop(){
     let user1: ContractAddress =
     0x0011d341c6e841426448ff39aa443a6dbb428914e05ba2259463c18308b86233 // team m 1
     .try_into()
@@ -121,27 +121,27 @@ fn test_prop_eighty(){
     let props = IProposalsDispatcher { contract_address: gov_addr};
     let staking = IStakingDispatcher { contract_address: gov_addr};
     prank(CheatTarget::One(gov_addr), user1, CheatSpan::TargetCalls(1));
-    assert(props.submit_proposal(0x42, 0x4) == 80, 'prop not 80?');
+    let prop_id = props.submit_proposal(0x42, 0x4);
     prank(CheatTarget::One(gov_addr), user1, CheatSpan::TargetCalls(1));
-    props.vote(80, 1);
+    props.vote(prop_id, 1);
 
     let user2: ContractAddress = 0x0583a9d956d65628f806386ab5b12dccd74236a3c6b930ded9cf3c54efc722a1.try_into().unwrap(); // team o
     prank(CheatTarget::One(gov_addr), user2, CheatSpan::TargetCalls(1));
-    props.vote(80, 1);
+    props.vote(prop_id, 1);
 
     let user3: ContractAddress = 0x03d1525605db970fa1724693404f5f64cba8af82ec4aab514e6ebd3dec4838ad.try_into().unwrap(); //team d
     prank(CheatTarget::One(gov_addr), user3, CheatSpan::TargetCalls(1));
-    props.vote(80, 1);
+    props.vote(prop_id, 1);
 
     let user4: ContractAddress = 0x00d79a15d84f5820310db21f953a0fae92c95e25d93cb983cc0c27fc4c52273c.try_into().unwrap(); //team m 2
     prank(CheatTarget::One(gov_addr), user4, CheatSpan::TargetCalls(1));
-    props.vote(80, 1);
+    props.vote(prop_id, 1);
 
     let user5: ContractAddress = 0x06717eaf502baac2b6b2c6ee3ac39b34a52e726a73905ed586e757158270a0af.try_into().unwrap(); //team a 1
     prank(CheatTarget::One(gov_addr), user5, CheatSpan::TargetCalls(1));
-    props.vote(80, 1);
+    props.vote(prop_id, 1);
 
-    let (yay, _nay) = props.get_vote_counts(80);
-    assert(get_total_voted_adjusted(props, staking, 80) == yay, 'votes dont match??');
-    println!("voted on 80: {:?}", yay/DECS);
+    let (yay, _nay) = props.get_vote_counts(prop_id);
+    assert(get_total_voted_adjusted(props, staking, prop_id) == yay, 'votes dont match??');
+    println!("voted on prop_id: {:?}", yay/DECS);
 }
