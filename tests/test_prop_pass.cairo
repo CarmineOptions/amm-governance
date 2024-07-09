@@ -162,6 +162,6 @@ fn test_can_pass_next_prop() {
     props.vote(prop_id, 1);
 
     let (yay, _nay) = props.get_vote_counts(prop_id);
-    assert(get_total_voted_adjusted(props, staking, prop_id) == yay, 'votes dont match??');
+    assert(get_total_voted_adjusted(props, staking, prop_id.try_into().unwrap()) == yay, 'votes dont match??');
     println!("voted on prop_id: {:?}", yay / DECS);
 }
