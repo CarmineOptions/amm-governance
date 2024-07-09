@@ -2,8 +2,8 @@ use amm_governance::proposals::{IProposalsDispatcherTrait, IProposalsDispatcher}
 use amm_governance::staking::{IStakingDispatcherTrait, IStakingDispatcher};
 use openzeppelin::token::erc20::interface::{IERC20DispatcherTrait, IERC20Dispatcher};
 
-use snforge_std::{CheatSpan, CheatTarget, prank};
-use starknet::ContractAddress;
+use snforge_std::{CheatSpan, CheatTarget, prank, start_warp};
+use starknet::{ContractAddress, get_block_timestamp};
 
 const DECS: u128 = 1000000000000000000; // 10*18
 
@@ -132,6 +132,11 @@ fn test_can_pass_next_prop() {
         .unwrap();
     let props = IProposalsDispatcher { contract_address: gov_addr };
     let staking = IStakingDispatcher { contract_address: gov_addr };
+    let vecrm = IERC20Dispatcher {
+        contract_address: 0x3c0286e9e428a130ae7fbbe911b794e8a829c367dd788e7cfe3efb0367548fa
+            .try_into()
+            .unwrap()
+    };
     prank(CheatTarget::One(gov_addr), user1, CheatSpan::TargetCalls(1));
     let prop_id = props.submit_proposal(0x42, 0x4);
     prank(CheatTarget::One(gov_addr), user1, CheatSpan::TargetCalls(1));
@@ -155,6 +160,14 @@ fn test_can_pass_next_prop() {
     prank(CheatTarget::One(gov_addr), user4, CheatSpan::TargetCalls(1));
     props.vote(prop_id, 1);
 
+    let community1: ContractAddress =
+        0x0428c240649b76353644faF011B0d212e167f148fdd7479008Aa44eEaC782BfC
+        .try_into()
+        .unwrap(); // community m 1
+    prank(CheatTarget::One(gov_addr), community1, CheatSpan::TargetCalls(1));
+    props.vote(prop_id, 1);
+    let community1_balance: u128 = vecrm.balance_of(community1).try_into().unwrap();
+
     let user5: ContractAddress = 0x06717eaf502baac2b6b2c6ee3ac39b34a52e726a73905ed586e757158270a0af
         .try_into()
         .unwrap(); //team a 1
@@ -162,6 +175,16 @@ fn test_can_pass_next_prop() {
     props.vote(prop_id, 1);
 
     let (yay, _nay) = props.get_vote_counts(prop_id);
-    assert(get_total_voted_adjusted(props, staking, prop_id.try_into().unwrap()) == yay, 'votes dont match??');
+    assert(
+        get_total_voted_adjusted(props, staking, prop_id.try_into().unwrap())
+            + community1_balance == yay,
+        'votes dont match??'
+    );
     println!("voted on prop_id: {:?}", yay / DECS);
+
+    let curr_timestamp = get_block_timestamp();
+    let warped_timestamp = curr_timestamp + consteval_int!(60 * 60 * 24 * 7) + 420;
+
+    start_warp(CheatTarget::One(gov_addr), warped_timestamp);
+    assert(props.get_proposal_status(prop_id) == 1, 'prop not passed');
 }
