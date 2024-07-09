@@ -4,7 +4,7 @@ use konoha::types::{ContractType, PropDetails, VoteStatus, CustomProposalConfig}
 use starknet::ContractAddress;
 
 #[starknet::interface]
-trait IProposals<TContractState> {
+pub trait IProposals<TContractState> {
     fn vote(ref self: TContractState, prop_id: felt252, opinion: felt252);
     fn get_proposal_details(self: @TContractState, prop_id: felt252) -> PropDetails;
     fn get_vote_counts(self: @TContractState, prop_id: felt252) -> (u128, u128);
