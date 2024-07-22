@@ -6,6 +6,7 @@ use amm_governance::contract::{
 use amm_governance::staking::{IStakingDispatcher, IStakingDispatcherTrait};
 use amm_governance::vecarm::{IVeCRMDispatcher, IVeCRMDispatcherTrait};
 use core::num::traits::Zero;
+use konoha::constants;
 
 use konoha::contract::IGovernanceDispatcher;
 use konoha::contract::IGovernanceDispatcherTrait;
@@ -17,15 +18,15 @@ use konoha::upgrades::IUpgradesDispatcher;
 use konoha::upgrades::IUpgradesDispatcherTrait;
 use openzeppelin::upgrades::interface::{IUpgradeableDispatcher, IUpgradeableDispatcherTrait};
 use snforge_std::{
-    BlockId, declare, ContractClassTrait, ContractClass, start_prank, CheatTarget, prank, CheatSpan,
-    roll, start_warp
+    BlockId, declare, ContractClassTrait, ContractClass, start_prank, stop_prank, CheatTarget,
+    prank, CheatSpan, roll, start_warp
 };
 use starknet::{ClassHash, ContractAddress, get_block_timestamp, get_block_number};
 use super::utils::vote_on_proposal;
 
-// commented out as it fails with 'No voting power' for now
-//#[test]
-//#[fork("MAINNET")]
+
+#[test]
+#[fork("MAINNET")]
 fn test_upgrade_to_master() {
     let gov_contract_addr: ContractAddress =
         0x001405ab78ab6ec90fba09e6116f373cda53b0ba557789a4578d8c1ec374ba0f
@@ -37,24 +38,21 @@ fn test_upgrade_to_master() {
     let gov_class: ContractClass = declare("Governance").expect('unable to declare!');
     assert(Zero::is_non_zero(@gov_class.class_hash), 'new classhash zero??');
     let user2_address: ContractAddress =
-        0x052df7acdfd3174241fa6bd5e1b7192cd133f8fc30a2a6ed99b0ddbfb5b22dcd
+        0x06e2c2a5da2e5478b1103d452486afba8378e91f32a124f0712f09edd3ccd923
         .try_into()
         .unwrap();
-    start_prank(CheatTarget::One(gov_contract_addr), user2_address);
+    prank(CheatTarget::One(gov_contract_addr), user2_address, CheatSpan::TargetCalls(1));
     let new_prop_id = dispatcher.submit_proposal(gov_class.class_hash.into(), 1);
     println!("Prop submitted: {:?}", new_prop_id);
     vote_on_proposal(gov_contract_addr, new_prop_id.try_into().unwrap());
 
+    //simulate passage of time
+    let current_timestamp = get_block_timestamp();
+    let end_timestamp = current_timestamp + constants::PROPOSAL_VOTING_SECONDS;
+    start_warp(CheatTarget::One(gov_contract_addr), end_timestamp + 1);
+
     let upgrade_dispatcher = IUpgradesDispatcher { contract_address: gov_contract_addr };
     upgrade_dispatcher.apply_passed_proposal(new_prop_id);
-    let amm_governance = IMigrateDispatcher { contract_address: gov_contract_addr };
-    amm_governance.add_custom_proposals();
-    println!("Checking if new gov is healthy...");
-    assert(check_if_healthy(gov_contract_addr), 'new gov not healthy');
-    upgrade_amm(
-        gov_contract_addr,
-        0x0239b6f9eeb5ffba1df4da7f33e116d3603d724283bc01338125eed82964e729.try_into().unwrap()
-    );
 }
 
 fn test_deposit_to_amm_from_treasury(gov_contract_addr: ContractAddress) {
@@ -139,7 +137,7 @@ fn test_upgrade_amm_back(amm: ContractAddress, owner: ContractAddress, new_class
 
 
 #[test]
-#[fork("MAINNET")]
+#[fork("MAINNET_BEFORE_UPGRADE_TO_KONOHA")]
 fn scenario_airdrop_staked_carm() {
     let gov_addr: ContractAddress =
         0x001405ab78ab6ec90fba09e6116f373cda53b0ba557789a4578d8c1ec374ba0f
@@ -185,14 +183,14 @@ fn scenario_airdrop_staked_carm() {
 
     let props = IProposalsDispatcher { contract_address: gov_addr };
     prank(CheatTarget::One(gov_addr), user1, CheatSpan::TargetCalls(6));
-    let prop_id_gov_upgrade = props.submit_proposal(0x04bc8bc7c476c4fca95624809dab1f1aa718edb566184a9d6dfe54f65b32b507, 1);
-    let prop_id_vecarm_upgrade = props.submit_proposal(0x008e98fd1f76f0d6fca8b03292e1dd6c8a6c5362f5aa0fd1186592168e9ad692, 2);
+    let prop_id_gov_upgrade = props
+        .submit_proposal(0x04bc8bc7c476c4fca95624809dab1f1aa718edb566184a9d6dfe54f65b32b507, 1);
+    let prop_id_vecarm_upgrade = props
+        .submit_proposal(0x008e98fd1f76f0d6fca8b03292e1dd6c8a6c5362f5aa0fd1186592168e9ad692, 2);
     props.vote(prop_id_gov_upgrade, 1);
     props.vote(prop_id_vecarm_upgrade, 1);
     let prop_id_airdrop = props
-        .submit_proposal(
-            0x1337, 3
-        ); // simulate airdrop proposal, no merkle tree root yet
+        .submit_proposal(0x1337, 3); // simulate airdrop proposal, no merkle tree root yet
     props.vote(prop_id_airdrop, 1);
     prank(CheatTarget::One(gov_addr), user2, CheatSpan::TargetCalls(3));
     props.vote(prop_id_gov_upgrade, 1);

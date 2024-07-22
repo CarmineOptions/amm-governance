@@ -89,7 +89,8 @@ fn test_unstake_airdrop() {
     props.vote(prop_id_gov_upgrade, 1);
 
     // Upgrade veCarm token
-    let prop_id_vecarm_upgrade = props.submit_proposal(0x008e98fd1f76f0d6fca8b03292e1dd6c8a6c5362f5aa0fd1186592168e9ad692, 2);
+    let prop_id_vecarm_upgrade = props
+        .submit_proposal(0x008e98fd1f76f0d6fca8b03292e1dd6c8a6c5362f5aa0fd1186592168e9ad692, 2);
     props.vote(prop_id_vecarm_upgrade, 1);
 
     // Propose Airdrop
@@ -230,7 +231,8 @@ fn test_unstake_airdrop_unstake_again_failing() {
     props.vote(prop_id_gov_upgrade, 1);
 
     // Upgrade veCarm token
-    let prop_id_vecarm_upgrade = props.submit_proposal(0x008e98fd1f76f0d6fca8b03292e1dd6c8a6c5362f5aa0fd1186592168e9ad692, 2);
+    let prop_id_vecarm_upgrade = props
+        .submit_proposal(0x008e98fd1f76f0d6fca8b03292e1dd6c8a6c5362f5aa0fd1186592168e9ad692, 2);
     props.vote(prop_id_vecarm_upgrade, 1);
 
     // Propose Airdrop
@@ -332,7 +334,8 @@ fn test_unstake_airdrop_team_member_failing() {
     props.vote(prop_id_gov_upgrade, 1);
 
     // Upgrade veCarm token
-    let prop_id_vecarm_upgrade = props.submit_proposal(0x008e98fd1f76f0d6fca8b03292e1dd6c8a6c5362f5aa0fd1186592168e9ad692, 2);
+    let prop_id_vecarm_upgrade = props
+        .submit_proposal(0x008e98fd1f76f0d6fca8b03292e1dd6c8a6c5362f5aa0fd1186592168e9ad692, 2);
     props.vote(prop_id_vecarm_upgrade, 1);
 
     // Propose Airdrop

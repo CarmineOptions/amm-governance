@@ -21,30 +21,20 @@ pub(crate) fn vote_on_proposal(gov_contract_addr: ContractAddress, prop_id: u32)
         .unwrap();
     top_carm_holders.append(user1_address);
     let user2_address: ContractAddress =
-        0x052df7acdfd3174241fa6bd5e1b7192cd133f8fc30a2a6ed99b0ddbfb5b22dcd
+        0x0583a9d956d65628f806386ab5b12dccd74236a3c6b930ded9cf3c54efc722a1
         .try_into()
         .unwrap();
     top_carm_holders.append(user2_address);
     let user3_address: ContractAddress =
-        0x0583a9d956d65628f806386ab5b12dccd74236a3c6b930ded9cf3c54efc722a1
+        0x06e2c2a5da2e5478b1103d452486afba8378e91f32a124f0712f09edd3ccd923
         .try_into()
         .unwrap();
     top_carm_holders.append(user3_address);
-    let carlote_address: ContractAddress =
-        0x021b2b25dd73bc60b0549683653081f8963562cbe5cba2d123ec0cbcbf0913e4
+    let user4_address: ContractAddress =
+        0x00d79a15d84f5820310db21f953a0fae92c95e25d93cb983cc0c27fc4c52273c
         .try_into()
         .unwrap();
-    top_carm_holders.append(carlote_address);
-    let fifth_address: ContractAddress =
-        0x02af7135154dc27d9311b79c57ccc7b3a6ed74efd0c2b81116e8eb49dbf6aaf8
-        .try_into()
-        .unwrap();
-    top_carm_holders.append(fifth_address);
-    let sixth_address: ContractAddress =
-        0x07824efd915baa421d93909bd7f24e36c022b5cfbc5af6687328848a6490ada7
-        .try_into()
-        .unwrap();
-    top_carm_holders.append(sixth_address);
+    top_carm_holders.append(user4_address);
     let madman_address: ContractAddress =
         0x06717eaf502baac2b6b2c6ee3ac39b34a52e726a73905ed586e757158270a0af
         .try_into()

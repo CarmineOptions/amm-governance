@@ -2,7 +2,7 @@ pub mod carm;
 pub mod constants;
 pub mod contract;
 mod options;
-mod proposals;
+pub mod proposals;
 pub mod staking;
 mod traits;
 mod types;
