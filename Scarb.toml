@@ -26,6 +26,11 @@ url = "http://178.32.172.148:6060/v0_7"
 block_id.tag = "Latest"
 
 [[tool.snforge.fork]]
+name = "MAINNET_BEFORE_UPGRADE_TO_KONOHA"
+url = "http://178.32.172.148:6060/v0_7"
+block_id.number = "652000"
+
+[[tool.snforge.fork]]
 name = "SEPOLIA"
 url = "http://178.32.172.148:6062/v0_7"
 block_id.tag = "Latest"
