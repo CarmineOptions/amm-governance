@@ -8,3 +8,4 @@ mod traits;
 mod types;
 mod upgrades;
 pub mod vecarm;
+mod arbitrary_proposal_add_options;
