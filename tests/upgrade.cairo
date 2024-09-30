@@ -176,7 +176,7 @@ fn scenario_airdrop_staked_carm() {
         0x0583a9d956d65628f806386ab5b12dccd74236a3c6b930ded9cf3c54efc722a1 // team
         .try_into()
         .unwrap();
-    let investor1: ContractAddress =
+    let _investor1: ContractAddress =
         0x056d761e1e5d1918dba05de02afdbd8de8da01a63147dce828c9b1fe9227077d
         .try_into()
         .unwrap();
