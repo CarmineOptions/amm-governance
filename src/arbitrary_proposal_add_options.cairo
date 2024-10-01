@@ -9,9 +9,9 @@ trait IArbitraryProposalAddOptions<TContractState> {
 pub mod ArbitraryProposalAddOptions {
     use amm_governance::proposals::proposals as proposals_component;
     use amm_governance::proposals::proposals::InternalTrait;
-    use konoha::types::{CustomProposalConfig};
     use konoha::contract::IGovernanceDispatcher;
     use konoha::contract::IGovernanceDispatcherTrait;
+    use konoha::types::{CustomProposalConfig};
     use starknet::{ContractAddress, ClassHash, get_contract_address};
 
     component!(path: proposals_component, storage: proposals, event: ProposalsEvent);

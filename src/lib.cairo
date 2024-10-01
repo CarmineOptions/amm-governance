@@ -1,3 +1,4 @@
+mod arbitrary_proposal_add_options;
 pub mod carm;
 pub mod constants;
 pub mod contract;
@@ -8,4 +9,3 @@ pub mod traits;
 pub mod types;
 mod upgrades;
 pub mod vecarm;
-mod arbitrary_proposal_add_options;
