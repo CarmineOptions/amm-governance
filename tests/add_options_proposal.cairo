@@ -5,6 +5,7 @@ use snforge_std::{
 use starknet::{ContractAddress, get_block_timestamp};
 
 use amm_governance::proposals::{IProposalsDispatcherTrait, IProposalsDispatcher};
+use amm_governance::traits::{IAMMDispatcher, IAMMDispatcherTrait};
 
 use konoha::upgrades::IUpgradesDispatcher;
 use konoha::upgrades::IUpgradesDispatcherTrait;
@@ -55,6 +56,9 @@ fn get_option_calldata() -> @Span<felt252> {
 #[test]
 #[fork("MAINNET")]
 fn test_add_custom_proposal() {
+
+    // # ADD CUSTOM PROPOSAL FOR ADDING OPTIONS
+
     let _option_deployer_contract_class: ContractClass = declare("OptionDeployer")
         .expect('unable to declare op dep'); // need to declare, is not used
     let arbitrary_proposal_contract_class: ContractClass = declare("ArbitraryProposalAddOptions")
@@ -95,18 +99,31 @@ fn test_add_custom_proposal() {
 
     start_warp(CheatTarget::One(gov_addr), warped_timestamp);
     assert(props.get_proposal_status(prop_id) == 1, 'arbitrary proposal not passed');
-    println!("add arbitrary proposal passed");
 
     let upgrades = IUpgradesDispatcher { contract_address: gov_addr };
 
     upgrades.apply_passed_proposal(prop_id);
 
-    prank(CheatTarget::One(gov_addr), user1, CheatSpan::TargetCalls(1));
+    println!("custom proposal added");
+
+    // # TRANSFER OWNERSHIP OF AMM
+
+    let amm_owner_address: ContractAddress = 0x74fd7da23e21f0f0479adb435221b23f57ca4c32a0c68aad9409a41c27f3067.try_into().unwrap();
+    let amm_address: ContractAddress = 0x047472e6755afc57ada9550b6a3ac93129cc4b5f98f51c73e0644d129fd208d9.try_into().unwrap();
+    let amm = IAMMDispatcher { contract_address: amm_address };
+
+    prank(CheatTarget::One(amm_address), amm_owner_address, CheatSpan::TargetCalls(1));
+    amm.transfer_ownership(gov_addr);
+
+    println!("AMM ownership transfered");
+
+    // # ADD OPTIONS VIA NEW CUSTOM PROPOSAL
 
     let add_options_calldata = get_option_calldata();
 
     println!("add options calldata: {:?}", add_options_calldata);
 
+    prank(CheatTarget::One(gov_addr), user1, CheatSpan::TargetCalls(1));
     // propose arbitrary proposal
     let prop_id2: felt252 = props.submit_custom_proposal(0x2, *add_options_calldata).into();
 
@@ -132,5 +149,5 @@ fn test_add_custom_proposal() {
 
     upgrades.apply_passed_proposal(prop_id2);
 
-    println!("add options applied");
+    println!("options added");
 }

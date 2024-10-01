@@ -4,7 +4,7 @@ pub mod contract;
 mod options;
 pub mod proposals;
 pub mod staking;
-mod traits;
+pub mod traits;
 mod types;
 mod upgrades;
 pub mod vecarm;
