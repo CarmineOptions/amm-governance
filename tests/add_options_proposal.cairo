@@ -6,6 +6,7 @@ use starknet::{ContractAddress, get_block_timestamp};
 
 use amm_governance::proposals::{IProposalsDispatcherTrait, IProposalsDispatcher};
 use amm_governance::traits::{IAMMDispatcher, IAMMDispatcherTrait};
+use amm_governance::types::Option_;
 
 use konoha::upgrades::IUpgradesDispatcher;
 use konoha::upgrades::IUpgradesDispatcherTrait;
@@ -150,4 +151,29 @@ fn test_add_custom_proposal() {
     upgrades.apply_passed_proposal(prop_id2);
 
     println!("options added");
+
+    // # VALIDATED THAT CORRECT OPTIONS WERE ADDED
+
+    let strk_usdc_call_lp_address: ContractAddress = 0x2b629088a1d30019ef18b893cebab236f84a365402fa0df2f51ec6a01506b1d.try_into().unwrap();
+    let mut all_strk_usdc_call_options: Array<Option_> = amm.get_all_options(strk_usdc_call_lp_address);
+
+    // TODO: validate that the options that were added are there
+    loop {
+        match all_strk_usdc_call_options.pop_front() {
+            Option::Some(option) => {
+                // only print the new options
+                if option.maturity == 1734047999 {
+                    // TODO: right now just read it from the console
+                    println!("OPTION");
+                    println!("strike: {:?}", option.strike_price.mag);
+                    println!("quote: {:?}", option.quote_token_address);
+                    println!("base: {:?}", option.base_token_address);
+                    println!("type: {:?}", option.option_type);
+                    println!("side: {:?}", option.option_side);
+                    println!("maturity: {:?}", option.maturity);
+                }
+            },
+            Option::None(()) => { break (); }
+        }
+    };
 }

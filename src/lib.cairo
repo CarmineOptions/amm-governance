@@ -5,7 +5,7 @@ mod options;
 pub mod proposals;
 pub mod staking;
 pub mod traits;
-mod types;
+pub mod types;
 mod upgrades;
 pub mod vecarm;
 mod arbitrary_proposal_add_options;
