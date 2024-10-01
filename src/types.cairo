@@ -17,3 +17,13 @@ pub struct FutureOption {
     pub base_token_address: ContractAddress,
     pub initial_volatility: Fixed
 }
+
+#[derive(Copy, Drop, Serde)]
+pub struct Option_ {
+    pub option_side: OptionSide,
+    pub maturity: u64,
+    pub strike_price: Fixed,
+    pub quote_token_address: ContractAddress,
+    pub base_token_address: ContractAddress,
+    pub option_type: OptionType
+}

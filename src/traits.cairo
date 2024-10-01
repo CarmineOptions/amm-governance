@@ -1,4 +1,4 @@
-use amm_governance::types::{OptionType, OptionSide};
+use amm_governance::types::{OptionType, OptionSide, Option_};
 use cubit::f128::types::{Fixed, FixedTrait};
 use starknet::{ContractAddress, ClassHash};
 
@@ -87,7 +87,7 @@ pub trait IAMM<TContractState> {
         self: @TContractState, lptoken_addr: ContractAddress, lpt_amt: u256
     ) -> u256;
     fn get_available_lptoken_addresses(self: @TContractState, order_i: felt252) -> ContractAddress;
-    // fn get_all_options(self: @TContractState, lptoken_address: ContractAddress) -> Array<Option_>;
+    fn get_all_options(self: @TContractState, lptoken_address: ContractAddress) -> Array<Option_>;
     // fn get_all_non_expired_options_with_premia(
     //     self: @TContractState, lptoken_address: ContractAddress
     // ) -> Array<OptionWithPremia>;
@@ -211,6 +211,7 @@ pub trait IAMM<TContractState> {
     fn set_pragma_checkpoint(ref self: TContractState, key: felt252);
     fn set_pragma_required_checkpoints(ref self: TContractState);
     fn upgrade(ref self: TContractState, new_implementation: ClassHash);
+    fn transfer_ownership(ref self: TContractState, new_owner: ContractAddress);
 }
 
 #[starknet::interface]
