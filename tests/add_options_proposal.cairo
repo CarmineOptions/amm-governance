@@ -1,15 +1,14 @@
-use snforge_std::{
-    CheatSpan, CheatTarget, ContractClassTrait, ContractClass, prank, start_warp, declare
-};
-
-use starknet::{ContractAddress, get_block_timestamp};
-
 use amm_governance::proposals::{IProposalsDispatcherTrait, IProposalsDispatcher};
 use amm_governance::traits::{IAMMDispatcher, IAMMDispatcherTrait};
 use amm_governance::types::Option_;
 
 use konoha::upgrades::IUpgradesDispatcher;
 use konoha::upgrades::IUpgradesDispatcherTrait;
+use snforge_std::{
+    CheatSpan, CheatTarget, ContractClassTrait, ContractClass, prank, start_warp, declare
+};
+
+use starknet::{ContractAddress, get_block_timestamp};
 
 fn get_voter_addresses() -> @Span<felt252> {
     let arr = array![
@@ -57,14 +56,8 @@ fn get_option_calldata() -> @Span<felt252> {
 #[test]
 #[fork("MAINNET")]
 fn test_add_custom_proposal() {
-
     // # ADD CUSTOM PROPOSAL FOR ADDING OPTIONS
 
-    let _option_deployer_contract_class: ContractClass = declare("OptionDeployer")
-        .expect('unable to declare op dep'); // need to declare, is not used
-    let arbitrary_proposal_contract_class: ContractClass = declare("ArbitraryProposalAddOptions")
-        .expect('unable to declare arb prop');
-    let arbitrary_proposal: felt252 = arbitrary_proposal_contract_class.class_hash.into();
     let gov_addr = 0x001405ab78ab6ec90fba09e6116f373cda53b0ba557789a4578d8c1ec374ba0f
         .try_into()
         .unwrap();
@@ -75,10 +68,7 @@ fn test_add_custom_proposal() {
         .try_into()
         .unwrap();
 
-    prank(CheatTarget::One(gov_addr), user1, CheatSpan::TargetCalls(1));
-
-    // propose arbitrary proposal
-    let prop_id = props.submit_proposal(arbitrary_proposal, 0x6);
+    let prop_id = 103;
 
     let mut voter_addresses = *get_voter_addresses();
 
@@ -109,8 +99,14 @@ fn test_add_custom_proposal() {
 
     // # TRANSFER OWNERSHIP OF AMM
 
-    let amm_owner_address: ContractAddress = 0x74fd7da23e21f0f0479adb435221b23f57ca4c32a0c68aad9409a41c27f3067.try_into().unwrap();
-    let amm_address: ContractAddress = 0x047472e6755afc57ada9550b6a3ac93129cc4b5f98f51c73e0644d129fd208d9.try_into().unwrap();
+    let amm_owner_address: ContractAddress =
+        0x74fd7da23e21f0f0479adb435221b23f57ca4c32a0c68aad9409a41c27f3067
+        .try_into()
+        .unwrap();
+    let amm_address: ContractAddress =
+        0x047472e6755afc57ada9550b6a3ac93129cc4b5f98f51c73e0644d129fd208d9
+        .try_into()
+        .unwrap();
     let amm = IAMMDispatcher { contract_address: amm_address };
 
     prank(CheatTarget::One(amm_address), amm_owner_address, CheatSpan::TargetCalls(1));
@@ -154,8 +150,12 @@ fn test_add_custom_proposal() {
 
     // # VALIDATED THAT CORRECT OPTIONS WERE ADDED
 
-    let strk_usdc_call_lp_address: ContractAddress = 0x2b629088a1d30019ef18b893cebab236f84a365402fa0df2f51ec6a01506b1d.try_into().unwrap();
-    let mut all_strk_usdc_call_options: Array<Option_> = amm.get_all_options(strk_usdc_call_lp_address);
+    let strk_usdc_call_lp_address: ContractAddress =
+        0x2b629088a1d30019ef18b893cebab236f84a365402fa0df2f51ec6a01506b1d
+        .try_into()
+        .unwrap();
+    let mut all_strk_usdc_call_options: Array<Option_> = amm
+        .get_all_options(strk_usdc_call_lp_address);
 
     // TODO: validate that the options that were added are there
     loop {
