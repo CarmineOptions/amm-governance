@@ -1,4 +1,4 @@
-use amm_governance::types::{OptionType, OptionSide, Option_};
+use amm_governance::types::{OptionType, OptionSide, Option_, Pool};
 use cubit::f128::types::{Fixed, FixedTrait};
 use starknet::{ContractAddress, ClassHash};
 
@@ -158,9 +158,9 @@ pub trait IAMM<TContractState> {
         base_token_address: ContractAddress,
         option_type: OptionType,
     ) -> ContractAddress;
-    // fn get_pool_definition_from_lptoken_address(
-    //     self: @TContractState, lptoken_addres: ContractAddress
-    // ) -> Pool;
+    fn get_pool_definition_from_lptoken_address(
+        self: @TContractState, lptoken_addres: ContractAddress
+    ) -> Pool;
     fn get_option_volatility(
         self: @TContractState, lptoken_address: ContractAddress, maturity: u64, strike_price: Fixed,
     ) -> Fixed;
@@ -212,6 +212,7 @@ pub trait IAMM<TContractState> {
     fn set_pragma_required_checkpoints(ref self: TContractState);
     fn upgrade(ref self: TContractState, new_implementation: ClassHash);
     fn transfer_ownership(ref self: TContractState, new_owner: ContractAddress);
+    fn owner(self: @TContractState) -> ContractAddress;
 }
 
 #[starknet::interface]
