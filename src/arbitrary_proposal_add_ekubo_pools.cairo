@@ -63,7 +63,7 @@ pub mod ArbitraryProposalAddEkuboPools {
 
             // Deploy new lp tokens
             let lptoken_class = LP_TOKEN_CLASS_HASH.try_into().unwrap();
-            
+
             // Ekubo Call Calldata
             let mut ekubo_call_lpt_calldata = array![];
             ekubo_call_lpt_calldata.append('Carmine EKUBO/USDC call pool'); // Name 
