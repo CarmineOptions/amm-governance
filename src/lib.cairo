@@ -1,3 +1,4 @@
+mod arbitrary_proposal_add_ekubo_pools;
 mod arbitrary_proposal_add_options;
 pub mod carm;
 pub mod constants;
