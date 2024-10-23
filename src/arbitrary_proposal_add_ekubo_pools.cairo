@@ -89,7 +89,7 @@ pub mod ArbitraryProposalAddEkuboPools {
 
             // Add the lptokens to the AMM
             let call_voladjspd = FixedTrait::new_unscaled(10_000, false);
-            let put_voladjspd = FixedTrait::new_unscaled(50_000, false);
+            let put_voladjspd = FixedTrait::new_unscaled(20_000, false);
 
             // Call
             amm
