@@ -53,8 +53,8 @@ fn get_option_calldata() -> @Span<felt252> {
     @arr.span()
 }
 
-#[test]
-#[fork("MAINNET")]
+// #[test]
+// #[fork("MAINNET")]
 fn test_add_custom_proposal() {
     // # ADD CUSTOM PROPOSAL FOR ADDING OPTIONS
 

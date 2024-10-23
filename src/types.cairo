@@ -27,3 +27,10 @@ pub struct Option_ {
     pub base_token_address: ContractAddress,
     pub option_type: OptionType
 }
+
+#[derive(Copy, Drop, Serde)]
+pub struct Pool {
+    pub quote_token_address: ContractAddress,
+    pub base_token_address: ContractAddress,
+    pub option_type: OptionType,
+}
