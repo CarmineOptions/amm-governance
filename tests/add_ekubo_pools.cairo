@@ -44,15 +44,12 @@ fn test_add_ekubo_options() {
         .unwrap();
 
     // Transfer ownership to governance
-    let amm_owner_address: ContractAddress =
-        0x74fd7da23e21f0f0479adb435221b23f57ca4c32a0c68aad9409a41c27f3067
-        .try_into()
-        .unwrap();
     let amm_address: ContractAddress =
         0x047472e6755afc57ada9550b6a3ac93129cc4b5f98f51c73e0644d129fd208d9
         .try_into()
         .unwrap();
     let amm = IAMMDispatcher { contract_address: amm_address };
+    let amm_owner_address: ContractAddress = amm.owner();
 
     prank(CheatTarget::One(amm_address), amm_owner_address, CheatSpan::TargetCalls(1));
     // start_prank(CheatTarget::One(amm_address), amm_owner_address);
