@@ -1,5 +1,8 @@
+use amm::pragma::get_pragma_median_price;
 use amm_governance::types::FutureOption;
+use amm_governance::types::OptionType;
 use core::array::SpanTrait;
+use cubit::f128::types::fixed::{Fixed, FixedTrait};
 // Handles adding new options to the AMM and linking them to the liquidity pool.
 // I have chosen this perhaps rather complex type layout in expectation of generating the options soon –
 // – first generating FutureOption, then generating everything from Pragma data
@@ -9,11 +12,25 @@ use core::array::SpanTrait;
 
 use starknet::contract_address::{ContractAddress};
 
+
 #[starknet::interface]
 trait IOptionDeployer<TContractState> {
     fn add_options(
         ref self: TContractState, amm_address: ContractAddress, options: Span<FutureOption>
     );
+}
+
+#[derive(Copy, Drop, Serde)]
+struct PreparedOption {
+    name_long: felt252,
+    name_short: felt252,
+    maturity: u64,
+    strike_price: Fixed,
+    option_type: OptionType,
+    lptoken_address: ContractAddress,
+    quote_token_address: ContractAddress,
+    base_token_address: ContractAddress,
+    initial_volatility: Fixed
 }
 
 
@@ -56,7 +73,7 @@ mod OptionDeployer {
     #[generate_trait]
     impl InternalFunctions of InternalFunctionsTrait {
         fn add_option(
-            ref self: ContractState, amm_address: ContractAddress, option: @FutureOption
+            ref self: ContractState, amm_address: ContractAddress, option: @PreparedOption
         ) {
             let o = *option;
 
@@ -111,17 +128,68 @@ mod OptionDeployer {
                     o.initial_volatility
                 );
         }
+
+        fn get_name(option: @FutureOption) -> (felt252, felt252) {
+            ('name long', 'namshort')
+        }
+
+        fn get_rounding_unit(
+            quote_token_address: ContractAddress, base_token_address: ContractAddress
+        ) -> Fixed {
+            FixedTrait::ONE() * 1000
+        }
     }
 
     #[abi(embed_v0)]
     impl OptionDeployer of super::IOptionDeployer<ContractState> {
         fn add_options(
-            ref self: ContractState, amm_address: ContractAddress, mut options: Span<FutureOption>
+            ref self: ContractState, amm_address: ContractAddress, options: Span<FutureOption>
         ) {
-            // TODO use block hash from block_hash syscall as salt // actually doable with the new syscall
+            let mut prepared_options = ArrayTrait::new();
+
             loop {
                 match options.pop_front() {
-                    Option::Some(option) => { self.add_option(amm_address, option); },
+                    Option::Some(option) => {
+                        let spot_price = get_pragma_median_price(
+                            *option.quote_token_address, *option.base_token_address
+                        );
+                        let strike_price = spot_price
+                            * (FixedTrait::ONE() + option.strike_price_offset);
+                        let rounding_unit = self
+                            .get_rounding_unit(
+                                option.quote_token_address, option.base_token_address
+                            );
+                        let strike_price_rounded = if (strike_price % rounding_unit) > 50 {
+                            strike_price + (rounding_unit - strike_price % rounding_unit)
+                        } else {
+                            strike_price - (strike_price % rounding_unit)
+                        };
+
+                        let (name_long, name_short) = self.get_name(@option);
+                        let prepared_option = super::PreparedOption {
+                            name_long: name_long,
+                            name_short: name_short,
+                            maturity: *option.maturity,
+                            strike_price: strike_price,
+                            option_type: option.option_type,
+                            lptoken_address: *option.lptoken_address,
+                            quote_token_address: *option.quote_token_address,
+                            base_token_address: *option.base_token_address,
+                            initial_volatility: option.initial_volatility
+                        };
+
+                        prepared_options.append(prepared_option);
+                    },
+                    Option::None(()) => { break (); },
+                };
+            };
+
+            let mut prepared_options_span = prepared_options.span();
+            loop {
+                match prepared_options_span.pop_front() {
+                    Option::Some(prepared_option) => {
+                        self.add_option(amm_address, prepared_option);
+                    },
                     Option::None(()) => { break (); },
                 };
             }
