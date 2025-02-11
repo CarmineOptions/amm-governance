@@ -37,7 +37,7 @@ fn get_voter_addresses() -> @Span<felt252> {
 
 
 #[test]
-#[fork("MAINNET", block_number: 818610)]
+#[fork("MAINNET_ADD_EKUBO_POOLS")]
 fn test_add_ekubo_options() {
     let gov_addr = 0x001405ab78ab6ec90fba09e6116f373cda53b0ba557789a4578d8c1ec374ba0f
         .try_into()

@@ -31,6 +31,11 @@ url = "$MAINNET_NODE_URL"
 block_id.number = "652000"
 
 [[tool.snforge.fork]]
+name = "MAINNET_ADD_EKUBO_POOLS"
+url = "$MAINNET_NODE_URL"
+block_id.number = "818610"
+
+[[tool.snforge.fork]]
 name = "SEPOLIA"
 url = "$SEPOLIA_NODE_URL"
 block_id.tag = "Latest"
