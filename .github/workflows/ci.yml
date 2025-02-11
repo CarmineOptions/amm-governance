@@ -1,10 +1,11 @@
 name: CI
 
 on:
+  workflow_dispatch:
   push:
     paths:
       - '**.cairo'
-      - '.github/'
+      - '.github/**'
       - 'Scarb.lock'
       - 'Scarb.toml'
 
