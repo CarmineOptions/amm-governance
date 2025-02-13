@@ -160,14 +160,6 @@ fn test_can_pass_next_prop() {
     prank(CheatTarget::One(gov_addr), user4, CheatSpan::TargetCalls(1));
     props.vote(prop_id, 1);
 
-    let community1: ContractAddress =
-        0x0428c240649b76353644faF011B0d212e167f148fdd7479008Aa44eEaC782BfC
-        .try_into()
-        .unwrap(); // community m 1
-    prank(CheatTarget::One(gov_addr), community1, CheatSpan::TargetCalls(1));
-    props.vote(prop_id, 1);
-    let community1_balance: u128 = vecrm.balance_of(community1).try_into().unwrap();
-
     let user5: ContractAddress = 0x06717eaf502baac2b6b2c6ee3ac39b34a52e726a73905ed586e757158270a0af
         .try_into()
         .unwrap(); //team a 1
@@ -176,8 +168,7 @@ fn test_can_pass_next_prop() {
 
     let (yay, _nay) = props.get_vote_counts(prop_id);
     assert(
-        get_total_voted_adjusted(props, staking, prop_id.try_into().unwrap())
-            + community1_balance == yay,
+        get_total_voted_adjusted(props, staking, prop_id.try_into().unwrap()) == yay,
         'votes dont match??'
     );
     println!("voted on prop_id: {:?}", yay / DECS);
