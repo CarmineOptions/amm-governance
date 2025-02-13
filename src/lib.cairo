@@ -1,5 +1,5 @@
 mod arbitrary_proposal_add_ekubo_pools;
-mod arbitrary_proposal_add_options;
+mod arbitrary_proposal_upgrade_and_add_treasury;
 pub mod carm;
 pub mod constants;
 pub mod contract;
