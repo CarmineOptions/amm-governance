@@ -80,7 +80,6 @@ fn test_arbitrary_proposal_upgrade_and_add_treasury() {
     // Some checks
     let _prop_zero: FullPropDetails = props.get_proposal_details(0);
 
-
     let added_config: CustomProposalConfig = props.get_custom_proposal_type(3);
     let expected_target: felt252 =
         0x004e19b87b7777e6e7032ca325794cd793a4d6e9591a8c4e60e0d1b27e4da3d7;
