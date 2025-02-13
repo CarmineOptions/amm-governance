@@ -18,8 +18,8 @@ source = "git+https://github.com/influenceth/cubit.git#8eacc2b1d952d6266f9725776
 
 [[package]]
 name = "konoha"
-version = "0.5.0"
-source = "git+https://github.com/carmineoptions/konoha?branch=staking#02f2d977ccb91f080122ad2e831c23bdb4ca3866"
+version = "1.0.0"
+source = "git+https://github.com/carmineoptions/konoha#052e361a2c1332222ce51872a7080e448e5f68a3"
 dependencies = [
  "openzeppelin",
 ]

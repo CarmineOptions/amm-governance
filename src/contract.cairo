@@ -54,8 +54,7 @@ pub mod Governance {
         #[substorage(v0)]
         upgrades: upgrades_component::Storage,
         #[substorage(v0)]
-        staking: staking_component::Storage,
-        migration_performed: bool
+        staking: staking_component::Storage
     }
 
 
@@ -90,36 +89,35 @@ pub mod Governance {
             self.amm_address.read()
         }
     }
+// const ONE_MONTH: u64 = 2629743; // 30.44 days
+// const ONE_YEAR: u64 = 31536000; // 365 days
 
-    const ONE_MONTH: u64 = 2629743; // 30.44 days
-    const ONE_YEAR: u64 = 31536000; // 365 days
+// #[abi(embed_v0)]
+// impl Migrate of super::IMigrate<ContractState> {
+//     fn add_custom_proposals(ref self: ContractState) {
+//         assert(!self.migration_performed.read(), 'migration already done');
+//         let upgrade_amm = CustomProposalConfig {
+//             target: self.amm_address.read().into(),
+//             selector: selector!("upgrade"),
+//             library_call: false
+//         };
+//         let upgrade_govtoken = CustomProposalConfig {
+//             target: self.governance_token_address.read().into(),
+//             selector: selector!("upgrade"),
+//             library_call: false
+//         };
+//         self.proposals.add_custom_proposal_config(upgrade_amm);
+//         self.proposals.add_custom_proposal_config(upgrade_govtoken);
 
-    #[abi(embed_v0)]
-    impl Migrate of super::IMigrate<ContractState> {
-        fn add_custom_proposals(ref self: ContractState) {
-            assert(!self.migration_performed.read(), 'migration already done');
-            let upgrade_amm = CustomProposalConfig {
-                target: self.amm_address.read().into(),
-                selector: selector!("upgrade"),
-                library_call: false
-            };
-            let upgrade_govtoken = CustomProposalConfig {
-                target: self.governance_token_address.read().into(),
-                selector: selector!("upgrade"),
-                library_call: false
-            };
-            self.proposals.add_custom_proposal_config(upgrade_amm);
-            self.proposals.add_custom_proposal_config(upgrade_govtoken);
+//         self.migration_performed.write(true);
 
-            self.migration_performed.write(true);
-
-            let staking = IStakingDispatcher { contract_address: get_contract_address() };
-            let THREE_MONTHS = ONE_MONTH * 3;
-            let SIX_MONTHS = ONE_MONTH * 6;
-            staking.set_curve_point(ONE_MONTH, 100); // 1 KONOHA = 1 veKONOHA if staked for 1 month
-            staking.set_curve_point(THREE_MONTHS, 120);
-            staking.set_curve_point(SIX_MONTHS, 160);
-            staking.set_curve_point(ONE_YEAR, 250);
-        }
-    }
+//         let staking = IStakingDispatcher { contract_address: get_contract_address() };
+//         let THREE_MONTHS = ONE_MONTH * 3;
+//         let SIX_MONTHS = ONE_MONTH * 6;
+//         staking.set_curve_point(ONE_MONTH, 100); // 1 KONOHA = 1 veKONOHA if staked for 1 month
+//         staking.set_curve_point(THREE_MONTHS, 120);
+//         staking.set_curve_point(SIX_MONTHS, 160);
+//         staking.set_curve_point(ONE_YEAR, 250);
+//     }
+// }
 }

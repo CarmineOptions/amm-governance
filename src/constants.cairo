@@ -12,5 +12,6 @@ pub const AMM_CLASS_HASH: felt252 =
     0x0217863fdd0f365bff051411a5a1c792bb24e21c80f6bb4d297cef5ceb6d22f5;
 pub const OPTION_TOKEN_CLASS_HASH: felt252 =
     0x07fc0b6ecc96a698cdac8c4ae447816d73bffdd9603faacffc0a8047149d02ed;
+pub const QUORUM: felt252 = 10;
 
 pub const UNLOCK_DATE: u64 = 1719838800; // Mon Jul 01 2024 13:00:00 GMT+0000

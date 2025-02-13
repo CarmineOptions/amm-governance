@@ -1,18 +1,19 @@
 // Proposals component. Does not depend on anything. Holds governance token address.
 
-use konoha::types::{ContractType, PropDetails, VoteStatus, CustomProposalConfig};
+use konoha::types::{ContractType, FullPropDetails, VoteStatus, CustomProposalConfig};
 use starknet::ContractAddress;
 
 #[starknet::interface]
 pub trait IProposals<TContractState> {
     fn vote(ref self: TContractState, prop_id: felt252, opinion: felt252);
-    fn get_proposal_details(self: @TContractState, prop_id: felt252) -> PropDetails;
+    fn get_proposal_details(self: @TContractState, prop_id: felt252) -> FullPropDetails;
     fn get_vote_counts(self: @TContractState, prop_id: felt252) -> (u128, u128);
     fn submit_proposal(
         ref self: TContractState, payload: felt252, to_upgrade: ContractType
     ) -> felt252;
     fn get_proposal_status(self: @TContractState, prop_id: felt252) -> felt252;
     fn get_live_proposals(self: @TContractState) -> Array<felt252>;
+    fn get_appliable_proposals(self: @TContractState) -> Array<felt252>;
     fn get_user_voted(
         self: @TContractState, user_address: ContractAddress, prop_id: felt252
     ) -> VoteStatus;
@@ -20,10 +21,15 @@ pub trait IProposals<TContractState> {
         ref self: TContractState, custom_proposal_type: u32, calldata: Span<felt252>
     ) -> u32;
     fn get_custom_proposal_type(self: @TContractState, i: u32) -> CustomProposalConfig;
+    fn add_custom_proposal_config(ref self: TContractState, config: CustomProposalConfig) -> u32;
+    fn set_default_proposal_params(
+        ref self: TContractState, quorum: u32, proposal_voting_seconds: u32
+    );
 }
 
 #[starknet::component]
 pub(crate) mod proposals {
+    use amm_governance::constants::QUORUM;
     use amm_governance::staking::{IStakingDispatcher, IStakingDispatcherTrait};
 
     use core::array::{ArrayTrait, SpanTrait};
@@ -42,7 +48,9 @@ pub(crate) mod proposals {
     use konoha::traits::IERC20DispatcherTrait;
     use konoha::traits::get_governance_token_address_self;
 
-    use konoha::types::{BlockNumber, ContractType, CustomProposalConfig, PropDetails, VoteStatus};
+    use konoha::types::{
+        BlockNumber, ContractType, CustomProposalConfig, PropDetails, VoteStatus, FullPropDetails
+    };
     use starknet::BlockInfo;
     use starknet::ClassHash;
     use starknet::ContractAddress;
@@ -68,7 +76,9 @@ pub(crate) mod proposals {
         custom_proposal_type: LegacyMap::<u32, CustomProposalConfig>, // custom proposal type 
         custom_proposal_payload: LegacyMap::<
             (u32, u32), felt252
-        > // mapping from prop_id and index to calldata
+        >, // mapping from prop_id and index to calldata
+        quorum: u32,
+        proposal_voting_seconds: u32
     }
 
     #[derive(starknet::Event, Drop)]
@@ -246,14 +256,22 @@ pub(crate) mod proposals {
             i
         }
 
-        fn add_custom_proposal_config(
-            ref self: ComponentState<TContractState>, config: CustomProposalConfig
-        ) -> u32 {
-            let idx = self._find_free_custom_proposal_type();
-            assert(config.target.into() != 0, 'target must be nonzero');
-            assert(config.selector.into() != 0, 'selector must be nonzero');
-            self.custom_proposal_type.write(idx, config);
-            idx
+        fn get_quorum(self: @ComponentState<TContractState>) -> u32 {
+            let saved = self.quorum.read();
+            if (saved == 0) {
+                10
+            } else {
+                saved
+            }
+        }
+
+        fn get_proposal_voting_seconds(self: @ComponentState<TContractState>) -> u64 {
+            let saved = self.proposal_voting_seconds.read();
+            if (saved == 0) {
+                consteval_int!(60 * 60 * 24 * 7)
+            } else {
+                saved.into()
+            }
         }
     }
 
@@ -272,8 +290,14 @@ pub(crate) mod proposals {
 
         fn get_proposal_details(
             self: @ComponentState<TContractState>, prop_id: felt252
-        ) -> PropDetails {
-            self.proposal_details.read(prop_id)
+        ) -> FullPropDetails {
+            let prop_details = self.proposal_details.read(prop_id);
+            let vote_ends = self.proposal_vote_end_timestamp.read(prop_id);
+            FullPropDetails {
+                payload: prop_details.payload,
+                to_upgrade: prop_details.to_upgrade,
+                proposal_vote_end_timestamp: vote_ends
+            }
         }
 
         fn get_live_proposals(self: @ComponentState<TContractState>) -> Array<felt252> {
@@ -299,6 +323,34 @@ pub(crate) mod proposals {
             arr
         }
 
+        fn get_appliable_proposals(self: @ComponentState<TContractState>) -> Array<felt252> {
+            let max: u32 = self.get_free_prop_id_timestamp().try_into().unwrap();
+            let mut i: u32 = 0;
+            let mut arr = ArrayTrait::<felt252>::new();
+
+            loop {
+                if i >= max {
+                    break;
+                }
+
+                let prop_id: felt252 = i.into();
+                let current_status = self.get_proposal_status(prop_id);
+
+                // is passed
+                if current_status == 1 {
+                    let applied: felt252 = self.proposal_applied.read(prop_id);
+
+                    // is not applied
+                    if applied == 0 {
+                        arr.append(prop_id);
+                    }
+                }
+                i += 1;
+            };
+
+            arr
+        }
+
         fn get_user_voted(
             self: @ComponentState<TContractState>, user_address: ContractAddress, prop_id: felt252
         ) -> VoteStatus {
@@ -316,7 +368,7 @@ pub(crate) mod proposals {
             self.proposal_details.write(prop_id, prop_details);
 
             let current_timestamp: u64 = get_block_timestamp();
-            let end_timestamp: u64 = current_timestamp + constants::PROPOSAL_VOTING_SECONDS;
+            let end_timestamp: u64 = current_timestamp + self.get_proposal_voting_seconds();
             self.proposal_vote_end_timestamp.write(prop_id, end_timestamp);
 
             self.emit(Proposed { prop_id, payload, to_upgrade });
@@ -329,12 +381,8 @@ pub(crate) mod proposals {
             mut calldata: Span<felt252>
         ) -> u32 {
             let config: CustomProposalConfig = self.custom_proposal_type.read(custom_proposal_type);
-            assert(
-                config.target.into() != 0, 'custom prop classhash 0'
-            ); // wrong custom proposal type?
-            assert(
-                config.selector.into() != 0, 'custom prop selector 0'
-            ); // wrong custom proposal type?
+            assert(config.target != 0, 'custom prop classhash 0'); // wrong custom proposal type?
+            assert(config.selector != 0, 'custom prop selector 0'); // wrong custom proposal type?
             self.assert_eligible_to_propose();
 
             let prop_id_felt = self.get_free_prop_id_timestamp();
@@ -346,7 +394,11 @@ pub(crate) mod proposals {
             self.proposal_details.write(prop_id_felt, prop_details);
 
             let current_timestamp: u64 = get_block_timestamp();
-            let end_timestamp: u64 = current_timestamp + constants::PROPOSAL_VOTING_SECONDS;
+            let end_timestamp: u64 = if (config.proposal_voting_time == 0) {
+                current_timestamp + self.get_proposal_voting_seconds()
+            } else {
+                current_timestamp + config.proposal_voting_time.into()
+            };
             self.proposal_vote_end_timestamp.write(prop_id_felt, end_timestamp);
             self.emit(Proposed { prop_id: prop_id_felt, payload, to_upgrade: 5 });
 
@@ -416,7 +468,7 @@ pub(crate) mod proposals {
             let current_timestamp: u64 = get_block_timestamp();
 
             if current_timestamp <= end_timestamp {
-                return 0;
+                return self.check_proposal_passed_express(prop_id).into();
             }
 
             let gov_token_addr = get_governance_token_address_self();
@@ -436,7 +488,7 @@ pub(crate) mod proposals {
             assert(total_eligible_votes_u256.high == 0, 'unable to check quorum');
             let total_eligible_votes: u128 = total_eligible_votes_u256.low;
 
-            let quorum_threshold: u128 = total_eligible_votes * constants::QUORUM;
+            let quorum_threshold: u128 = total_eligible_votes * self.get_quorum().into();
             if total_tally_multiplied < quorum_threshold {
                 return constants::MINUS_ONE; // didn't meet quorum
             }
@@ -456,6 +508,29 @@ pub(crate) mod proposals {
             self: @ComponentState<TContractState>, i: u32
         ) -> CustomProposalConfig {
             self.custom_proposal_type.read(i)
+        }
+
+        fn add_custom_proposal_config(
+            ref self: ComponentState<TContractState>, config: CustomProposalConfig
+        ) -> u32 {
+            assert(get_caller_address() == get_contract_address(), 'can only be called by self');
+            let idx = self._find_free_custom_proposal_type();
+            assert(config.target != 0, 'target must be nonzero');
+            assert(config.selector != 0, 'selector must be nonzero');
+            self.custom_proposal_type.write(idx, config);
+            idx
+        }
+
+        fn set_default_proposal_params(
+            ref self: ComponentState<TContractState>, quorum: u32, proposal_voting_seconds: u32
+        ) {
+            assert(get_caller_address() == get_contract_address(), 'can only be called by self');
+            assert(quorum < 30, 'quorum must be <30');
+            assert(quorum >= 1, 'quorum < 1?');
+            assert(proposal_voting_seconds > 86400, 'propvoting secs < 1day');
+            assert(proposal_voting_seconds < 3000000, 'propvoting secs > 1mo?');
+            self.quorum.write(quorum);
+            self.proposal_voting_seconds.write(proposal_voting_seconds);
         }
     }
 }
