@@ -1,4 +1,12 @@
-use amm_governance::types::{OptionType, OptionSide, Option_, Pool};
+use amm_governance::types::{
+    OptionType, 
+    OptionSide, 
+    Option_, 
+    Pool, 
+    MarketConfig,
+    Fees
+};
+
 use cubit::f128::types::{Fixed, FixedTrait};
 use starknet::{ContractAddress, ClassHash};
 
@@ -290,4 +298,16 @@ pub trait IERC20<TContractState> {
     fn approve(ref self: TContractState, spender: ContractAddress, amount: u256) -> bool;
     fn mint(ref self: TContractState, recipient: ContractAddress, amount: u256);
     fn burn(ref self: TContractState, recipient: ContractAddress, amount: u256);
+}
+
+#[starknet::interface]
+pub trait IRemusDEX<TState> {
+    fn add_market(ref self: TState, market_config: MarketConfig) -> u64;
+    fn get_all_market_configs(self: @TState) -> Array<(u64, MarketConfig)>;
+    fn update_market_config(ref self: TState, market_id: u64, market_config: MarketConfig);
+    fn get_market_config(self: @TState, market_id: u64) -> MarketConfig;
+    fn set_trading_status(ref self: TState, market_id: u64, trading_enabled: bool);
+    fn get_collected_fees(self: @TState, token_address: ContractAddress) -> u256;
+    fn claim_fees(ref self: TState, token_address: ContractAddress, amount: u256);
+    fn upgrade(ref self: TState, hash: ClassHash);
 }
