@@ -1,13 +1,10 @@
+use amm_governance::arbitrary_proposal_upgrade_remus::REMUS_ADDRESS;
 
 
 use amm_governance::proposals::{IProposalsDispatcherTrait, IProposalsDispatcher};
-use amm_governance::traits::{IRemusDEXDispatcher, IRemusDEXDispatcherTrait};
 use amm_governance::traits::{IERC20Dispatcher, IERC20DispatcherTrait};
-use amm_governance::types::{
-    MarketConfig, Fees
-};
-use amm_governance::arbitrary_proposal_upgrade_remus::REMUS_ADDRESS;
-
+use amm_governance::traits::{IRemusDEXDispatcher, IRemusDEXDispatcherTrait};
+use amm_governance::types::{MarketConfig, Fees};
 
 
 use konoha::upgrades::IUpgradesDispatcher;
@@ -40,8 +37,9 @@ fn get_voter_addresses() -> @Span<felt252> {
 #[fork("MAINNET_UPGRADE_REMUS")]
 fn test_upgrade_remus() {
     let proposal_hash = 0x026098805ed363333c12189031a9955fe9bdc9e4ad68218b4ee5e8927ce14650;
-    
-    let gov_addr: ContractAddress = 0x001405ab78ab6ec90fba09e6116f373cda53b0ba557789a4578d8c1ec374ba0f
+
+    let gov_addr: ContractAddress =
+        0x001405ab78ab6ec90fba09e6116f373cda53b0ba557789a4578d8c1ec374ba0f
         .try_into()
         .unwrap();
 
@@ -55,7 +53,6 @@ fn test_upgrade_remus() {
     start_prank(CheatTarget::One(gov_addr), user1);
 
     let prop_id = props.submit_proposal(proposal_hash, 6);
-
 
     let mut voter_addresses = *get_voter_addresses();
     // vote yay with all users
@@ -82,17 +79,19 @@ fn test_upgrade_remus() {
 
     // Now try to add some market
     let new_conf = MarketConfig {
-        base_token: 0x75afe6402ad5a5c20dd25e10ec3b3986acaa647b77e4ae24b0cbc9a54a27a87.try_into().unwrap(),
-        quote_token: 0x53c91253bc9682c04929ca02ed00b3e423f6710d2ee7e0d5ebb06f3ecf368a8.try_into().unwrap(),
+        base_token: 0x75afe6402ad5a5c20dd25e10ec3b3986acaa647b77e4ae24b0cbc9a54a27a87
+            .try_into()
+            .unwrap(),
+        quote_token: 0x53c91253bc9682c04929ca02ed00b3e423f6710d2ee7e0d5ebb06f3ecf368a8
+            .try_into()
+            .unwrap(),
         tick_size: 1000000000000000,
         lot_size: 1000000000000000000,
         trading_enabled: true,
         fees: Fees { taker_fee_bps: 5, maker_fee_bps: 0 }
     };
 
-    let remus = IRemusDEXDispatcher {
-        contract_address: REMUS_ADDRESS.try_into().unwrap()
-    };
+    let remus = IRemusDEXDispatcher { contract_address: REMUS_ADDRESS.try_into().unwrap() };
 
     start_prank(CheatTarget::One(REMUS_ADDRESS.try_into().unwrap()), user1);
 

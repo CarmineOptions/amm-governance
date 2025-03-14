@@ -1,11 +1,4 @@
-use amm_governance::types::{
-    OptionType, 
-    OptionSide, 
-    Option_, 
-    Pool, 
-    MarketConfig,
-    Fees
-};
+use amm_governance::types::{OptionType, OptionSide, Option_, Pool, MarketConfig, Fees};
 
 use cubit::f128::types::{Fixed, FixedTrait};
 use starknet::{ContractAddress, ClassHash};
