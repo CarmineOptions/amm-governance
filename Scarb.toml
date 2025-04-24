@@ -41,6 +41,11 @@ url = "$MAINNET_NODE_URL"
 block_id.number = "1228005"
 
 [[tool.snforge.fork]]
+name = "MAINNET_ADJUST_REMUS_FEES"
+url = "$MAINNET_NODE_URL"
+block_id.number = "1343504"
+
+[[tool.snforge.fork]]
 name = "SEPOLIA"
 url = "$SEPOLIA_NODE_URL"
 block_id.tag = "Latest"
