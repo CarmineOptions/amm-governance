@@ -5,4 +5,5 @@ mod test_prop_pass;
 //mod add_options;
 mod upgrade;
 mod upgrade_remus;
+mod adjust_remus_fees;
 pub mod utils;
