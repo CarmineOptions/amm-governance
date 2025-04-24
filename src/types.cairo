@@ -34,3 +34,28 @@ pub struct Pool {
     pub base_token_address: ContractAddress,
     pub option_type: OptionType,
 }
+
+
+/// Struct containing fee configuration for a market
+/// Both fees are specified in basis points (bps)
+#[derive(Copy, Drop, Serde, Debug, Eq, PartialEq)]
+pub struct Fees {
+    pub taker_fee_bps: u16,
+    pub maker_fee_bps: u16
+}
+
+#[derive(Copy, Drop, Serde, Debug, Eq, PartialEq)]
+pub struct MarketConfig {
+    /// token representing the base asset of the market.
+    pub base_token: ContractAddress,
+    /// token representing the quote asset of the market.
+    pub quote_token: ContractAddress,
+    /// The minimum price increment (must divide the order price).
+    pub tick_size: u256,
+    /// The minimum order size increment (must divide the order amount).
+    pub lot_size: u256,
+    /// Whether this market currently allows trading
+    pub trading_enabled: bool,
+    /// Fees config
+    pub fees: Fees
+}
