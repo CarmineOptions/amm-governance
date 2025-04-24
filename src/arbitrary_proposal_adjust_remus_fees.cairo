@@ -47,21 +47,13 @@ pub mod ArbitraryProposalAdjustRemusFees {
             // Fetch all configs
             let mut configs = dex.get_all_market_configs();
 
-            while let Option::Some((market_id, market_config)) = configs.pop_front() {
-                let new_fees = Fees {
-                    taker_fee_bps: 0,
-                    maker_fee_bps: 0,
-                };
-                let new_market_config = MarketConfig {
-                    fees: new_fees,
-                    ..market_config
-                };
+            while let Option::Some((market_id, market_config)) = configs
+                .pop_front() {
+                    let new_fees = Fees { taker_fee_bps: 0, maker_fee_bps: 0, };
+                    let new_market_config = MarketConfig { fees: new_fees, ..market_config };
 
-                dex.update_market_config(
-                    market_id,
-                    new_market_config
-                );
-            }
+                    dex.update_market_config(market_id, new_market_config);
+                }
         }
     }
 }

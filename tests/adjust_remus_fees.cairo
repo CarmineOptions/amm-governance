@@ -1,4 +1,3 @@
-
 use amm_governance::arbitrary_proposal_adjust_remus_fees::REMUS_ADDRESS;
 
 
@@ -75,9 +74,7 @@ fn test_adjust_remus_fees() {
     start_warp(CheatTarget::One(gov_addr), warped_timestamp);
     assert(props.get_proposal_status(prop_id) == 1, 'arbitrary proposal not passed');
 
-    let mut dex = IRemusDEXDispatcher {
-        contract_address: REMUS_ADDRESS.try_into().unwrap()
-    };
+    let mut dex = IRemusDEXDispatcher { contract_address: REMUS_ADDRESS.try_into().unwrap() };
 
     let old_configs = dex.get_all_market_configs();
 
@@ -91,19 +88,20 @@ fn test_adjust_remus_fees() {
 
     assert(new_configs.len() == old_configs.len(), 'Configs len mismatch');
 
-    while i < new_configs.len() {
-        let (_, oc) = *old_configs.at(i);
-        let (_, nc) = *new_configs.at(i);
+    while i < new_configs
+        .len() {
+            let (_, oc) = *old_configs.at(i);
+            let (_, nc) = *new_configs.at(i);
 
-        assert(oc.base_token == nc.base_token, 'wrong base');
-        assert(oc.quote_token == nc.quote_token, 'wrong quote');
-        assert(oc.tick_size == nc.tick_size, 'wrong tick');
-        assert(oc.lot_size == nc.lot_size, 'wrong lot');
-        assert(oc.trading_enabled == oc.trading_enabled, 'wrong trading');
+            assert(oc.base_token == nc.base_token, 'wrong base');
+            assert(oc.quote_token == nc.quote_token, 'wrong quote');
+            assert(oc.tick_size == nc.tick_size, 'wrong tick');
+            assert(oc.lot_size == nc.lot_size, 'wrong lot');
+            assert(oc.trading_enabled == oc.trading_enabled, 'wrong trading');
 
-        assert(nc.fees.taker_fee_bps == 0, 'wrong taker fee');
-        assert(nc.fees.maker_fee_bps == 0, 'wrong maker fee');
+            assert(nc.fees.taker_fee_bps == 0, 'wrong taker fee');
+            assert(nc.fees.maker_fee_bps == 0, 'wrong maker fee');
 
-        i += 1;
-    }
+            i += 1;
+        }
 }
